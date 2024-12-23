@@ -1,7 +1,8 @@
 #ifndef SHAPE_H
 #define SHAPE_H
 #include "Defs.h"
-
+#include <string>
+#include <vector>
 class Shape
 {
 protected:
