@@ -1,11 +1,18 @@
 #include "Group.h"
 
-Group::Group(std::vector<Shape*>& shapes, float strokeOpacity, float fillOpacity, RGB strokeRGB, RGB fillRGB, float strokeWidth, Transform transform, int fontSize, std::string fill, std::string stroke)
-    : Shape(fillRGB, strokeRGB, fillOpacity, strokeOpacity, strokeWidth, transform, fill, stroke), shapes(shapes), fontSize(fontSize) {
+Group::Group(const Transform& transform)
+    : Shape() {
+    this->transform = transform;
 }
 
 void Group::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
+    GraphicsState state = TransformSVG(graphics, transform);
     for (auto& shape : shapes) {
         shape->Draw(graphics, defs);
     }
+    graphics.Restore(state);
+}
+
+void Group::AddShape(Shape* shape) {
+    shapes.push_back(shape);
 }

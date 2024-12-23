@@ -6,12 +6,12 @@
 
 class Group : public Shape {
 public:
-    Group(std::vector<Shape*>& shapes, float strokeOpacity, float fillOpacity, RGB strokeRGB, RGB fillRGB, float strokeWidth, Transform transform, int fontSize, std::string fill, std::string stroke);
+    Group(const Transform& transform);
     void Draw(Graphics& graphics, std::vector<Defs*>& defs) override;
+    void AddShape(Shape* shape);
 
 private:
     std::vector<Shape*> shapes;
-    int fontSize;
 };
 
 #endif // GROUP_H
