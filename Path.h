@@ -2,6 +2,7 @@
 #define PATH_H
 
 #include "Shapes.h"
+#include "Defs.h"
 #include <vector>
 #include <string>
 
@@ -16,8 +17,8 @@ private:
     std::vector<float> values;
     std::vector<char> types;
 
-    void AddArc(PointF& lastPoint, float rx, float ry, float xAxisRotation, bool largeArcFlag, bool sweepFlag, PointF endPoint);
-    void AddArc(float cx, float cy, float rx, float ry, float startAngle, float deltaAngle, bool sweepFlag);
+    void AddArc(GraphicsPath& pathToDraw, PointF& lastPoint, float rx, float ry, float xAxisRotation, bool largeArcFlag, bool sweepFlag, PointF endPoint);
+    void AddArc(GraphicsPath& pathToDraw, float cx, float cy, float rx, float ry, float startAngle, float deltaAngle, bool sweepFlag);
 };
 
 #endif // PATH_H

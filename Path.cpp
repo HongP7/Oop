@@ -3,6 +3,10 @@
 #include <iostream>
 #include <cmath>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 ClassPath::ClassPath(const std::string& pathData, const Transform& transform)
     : Shape(), pathData(pathData) {
     this->transform = transform;
@@ -65,25 +69,56 @@ void ClassPath::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
             break;
         case 'C':
         case 'c':
-            pathToDraw.AddBezier(lastPoint, PointF(values[valueIndex], values[valueIndex + 1]), PointF(values[valueIndex + 2], values[valueIndex + 3]), PointF(values[valueIndex + 4], values[valueIndex + 5]));
+            pathToDraw.AddBezier(
+                static_cast<REAL>(lastPoint.X), static_cast<REAL>(lastPoint.Y),
+                static_cast<REAL>(values[valueIndex]), static_cast<REAL>(values[valueIndex + 1]),
+                static_cast<REAL>(values[valueIndex + 2]), static_cast<REAL>(values[valueIndex + 3]),
+                static_cast<REAL>(values[valueIndex + 4]), static_cast<REAL>(values[valueIndex + 5])
+            );
             lastPoint = PointF(values[valueIndex + 4], values[valueIndex + 5]);
             controlPoint = PointF(values[valueIndex + 2], values[valueIndex + 3]);
             valueIndex += 6;
             break;
         case 'S':
         case 's':
-            pathToDraw.AddBezier(lastPoint, PointF(2 * lastPoint.X - controlPoint.X, 2 * lastPoint.Y - controlPoint.Y), PointF(values[valueIndex], values[valueIndex + 1]), PointF(values[valueIndex + 2], values[valueIndex + 3]));
+            pathToDraw.AddBezier(
+                static_cast<REAL>(lastPoint.X), static_cast<REAL>(lastPoint.Y),
+                static_cast<REAL>(2 * lastPoint.X - controlPoint.X), static_cast<REAL>(2 * lastPoint.Y - controlPoint.Y),
+                static_cast<REAL>(values[valueIndex]), static_cast<REAL>(values[valueIndex + 1]),
+                static_cast<REAL>(values[valueIndex + 2]), static_cast<REAL>(values[valueIndex + 3])
+            );
             lastPoint = PointF(values[valueIndex + 2], values[valueIndex + 3]);
             controlPoint = PointF(values[valueIndex], values[valueIndex + 1]);
             valueIndex += 4;
             break;
         case 'Q':
         case 'q':
-            pathToDraw.AddBezier(lastPoint, PointF(values[valueIndex], values[valueIndex + 1]), PointF(values[valueIndex + 2], values[valueIndex + 3]));
-            lastPoint = PointF(values[valueIndex + 2], values[valueIndex + 3]);
-            controlPoint = PointF(values[valueIndex], values[valueIndex + 1]);
+        {
+            // Chuyển đổi quadratic Bezier curve thành cubic Bezier curve
+            float x1 = lastPoint.X;
+            float y1 = lastPoint.Y;
+            float x2 = values[valueIndex];
+            float y2 = values[valueIndex + 1];
+            float x3 = values[valueIndex + 2];
+            float y3 = values[valueIndex + 3];
+
+            float c1x = x1 + 2.0f / 3.0f * (x2 - x1);
+            float c1y = y1 + 2.0f / 3.0f * (y2 - y1);
+            float c2x = x3 + 2.0f / 3.0f * (x2 - x3);
+            float c2y = y3 + 2.0f / 3.0f * (y2 - y3);
+
+            pathToDraw.AddBezier(
+                static_cast<REAL>(x1), static_cast<REAL>(y1),
+                static_cast<REAL>(c1x), static_cast<REAL>(c1y),
+                static_cast<REAL>(c2x), static_cast<REAL>(c2y),
+                static_cast<REAL>(x3), static_cast<REAL>(y3)
+            );
+
+            lastPoint = PointF(x3, y3);
+            controlPoint = PointF(x2, y2);
             valueIndex += 4;
             break;
+        }
         case 'T':
         case 't':
             pathToDraw.AddLine(lastPoint, PointF(values[valueIndex], values[valueIndex + 1]));
@@ -105,7 +140,7 @@ void ClassPath::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
                 endPoint.Y += lastPoint.Y;
             }
 
-            AddArc(lastPoint, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, endPoint);
+            AddArc(pathToDraw, lastPoint, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, endPoint);
             lastPoint = endPoint;
             valueIndex += 7;
             break;
@@ -116,30 +151,46 @@ void ClassPath::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
             break;
         }
     }
-        // Tạo brush và pen cho fill và stroke
-        SolidBrush fillBrush(Color(255 * fillOpacity, fillRGB.r, fillRGB.g, fillRGB.b));
-    Pen strokePen(Color(255 * strokeOpacity, strokeRGB.r, strokeRGB.g, strokeRGB.b), strokeWidth);
+    // Chuyển đổi giá trị float sang BYTE
+    BYTE fillR = static_cast<BYTE>(fillRGB.r);
+    BYTE fillG = static_cast<BYTE>(fillRGB.g);
+    BYTE fillB = static_cast<BYTE>(fillRGB.b);
+    BYTE fillA = static_cast<BYTE>(255 * fillOpacity);
+
+    BYTE strokeR = static_cast<BYTE>(strokeRGB.r);
+    BYTE strokeG = static_cast<BYTE>(strokeRGB.g);
+    BYTE strokeB = static_cast<BYTE>(strokeRGB.b);
+    BYTE strokeA = static_cast<BYTE>(255 * strokeOpacity);
+    // Tạo brush và pen cho fill và stroke
+    SolidBrush fillBrush(Color(255 * fillOpacity, fillRGB.r, fillRGB.g, fillRGB.b));
+    Pen strokePen(Color(255 * fillOpacity, strokeRGB.r, strokeRGB.g, strokeRGB.b), strokeWidth);
 
     if (!fill.empty()) {
         // Tìm kiếm gradient tương ứng trong defs
         for (Defs* def : defs) {
-            for (auto& gradient : def->getGradients()) {
+            for (auto& gradient : def->getlinear()) {
                 if (gradient->getID() == fill) {
-                    // Xử lý LinearGradientBrush hoặc RadialGradientBrush
-                    if (auto* linearGradient = dynamic_cast<LinearGradient*>(gradient)) {
-                        LinearGradientBrush gradientBrush(linearGradient->getStart(), linearGradient->getEnd(), linearGradient->getStartColor(), linearGradient->getEndColor());
-                        gradientBrush.SetInterpolationColors(linearGradient->getColors(), linearGradient->getPositions(), linearGradient->getColorCount());
-                        graphics.FillPath(&gradientBrush, &pathToDraw);
+                    LinearGradientBrush gradientBrush(PointF(gradient->getPoint().x1, gradient->getPoint().y1),
+                        PointF(gradient->getPoint().x2, gradient->getPoint().y2),
+                        Color(255, gradient->getStopList()[0]->getstopColor_red(), gradient->getStopList()[0]->getstopColor_green(), gradient->getStopList()[0]->getstopColor_blue()),
+                        Color(255, gradient->getStopList()[1]->getstopColor_red(), gradient->getStopList()[1]->getstopColor_green(), gradient->getStopList()[1]->getstopColor_blue()));
+                    graphics.FillPath(&gradientBrush, &pathToDraw);
+                }
+            }
+            for (auto& gradient : def->getradial()) {
+                if (gradient->getID() == fill) {
+                    PointF center = PointF(gradient->getcx(), gradient->getcy());
+                    float radius = gradient->getr();
+                    PathGradientBrush gradientBrush(&pathToDraw);
+                    gradientBrush.SetCenterColor(Color(255, gradient->getStopList()[0]->getstopColor_red(), gradient->getStopList()[0]->getstopColor_green(), gradient->getStopList()[0]->getstopColor_blue()));
+                    int colorCount = gradient->getStopList().size();
+                    Color* surroundColors = new Color[colorCount];
+                    for (int i = 0; i < colorCount; ++i) {
+                        surroundColors[i] = Color(255, gradient->getStopList()[i]->getstopColor_red(), gradient->getStopList()[i]->getstopColor_green(), gradient->getStopList()[i]->getstopColor_blue());
                     }
-                    else if (auto* radialGradient = dynamic_cast<RadialGradient*>(gradient)) {
-                        PointF center = radialGradient->getCenter();
-                        float radius = radialGradient->getRadius();
-                        PathGradientBrush gradientBrush(&pathToDraw);
-                        gradientBrush.SetCenterColor(radialGradient->getCenterColor());
-                        gradientBrush.SetSurroundColors(radialGradient->getSurroundColors(), radialGradient->getColorCount());
-                        graphics.FillPath(&gradientBrush, &pathToDraw);
-                    }
-                    break;
+                    gradientBrush.SetSurroundColors(surroundColors, &colorCount);
+                    graphics.FillPath(&gradientBrush, &pathToDraw);
+                    delete[] surroundColors;
                 }
             }
         }
@@ -152,7 +203,7 @@ void ClassPath::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
     graphics.Restore(state);
 }
 
-void GraphicsPath::AddArc(PointF& lastPoint, float rx, float ry, float xAxisRotation, bool largeArcFlag, bool sweepFlag, PointF endPoint) {
+void ClassPath::AddArc(GraphicsPath& pathToDraw, PointF& lastPoint, float rx, float ry, float xAxisRotation, bool largeArcFlag, bool sweepFlag, PointF endPoint) {
     // Chuyển đổi các góc từ độ sang radian
     float phi = xAxisRotation * (M_PI / 180.0);
 
@@ -214,16 +265,16 @@ void GraphicsPath::AddArc(PointF& lastPoint, float rx, float ry, float xAxisRota
         deltaTheta += 2 * M_PI;
     }
 
-    AddArc(cx, cy, rx, ry, theta, deltaTheta, sweepFlag);
+    AddArc(pathToDraw, cx, cy, rx, ry, theta, deltaTheta, sweepFlag);
 
     lastPoint = endPoint;
 }
 
-void GraphicsPath::AddArc(float cx, float cy, float rx, float ry, float startAngle, float deltaAngle, bool sweepFlag) {
+void ClassPath::AddArc(GraphicsPath& pathToDraw, float cx, float cy, float rx, float ry, float startAngle, float deltaAngle, bool sweepFlag) {
     // Ensure angles are in radians
     if (!sweepFlag) {
         deltaAngle = -deltaAngle;
     }
 
-    GraphicsPath::AddArc(cx - rx, cy - ry, 2 * rx, 2 * ry, startAngle * (180.0 / M_PI), deltaAngle * (180.0 / M_PI));
+    pathToDraw.AddArc(cx - rx, cy - ry, 2 * rx, 2 * ry, startAngle * (180.0 / M_PI), deltaAngle * (180.0 / M_PI));
 }
