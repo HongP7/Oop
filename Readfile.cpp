@@ -681,3 +681,63 @@ vector<string> mergeVector(vector<string> v1, vector<string> v2)
     }
     return v3;
 }
+
+                
+void parseTransformChild(const string& transformStr, Transform& transform, groupChild& groupChild)
+{
+    if (transformStr.find("matrix") != string::npos) {
+        parseTransformMatrix(transformStr, transform);
+    }
+    else {
+        parseTransform(transformStr, transform);
+
+        if (!transformStr.empty())
+        {
+            transform.translateX += groupChild.transform.translateX;
+            transform.translateY += groupChild.transform.translateY;
+            transform.rotateAngle += groupChild.transform.rotateAngle;
+            transform.rotateAngle = (transform.rotateAngle > 360) ? (transform.rotateAngle - 360) : transform.rotateAngle;
+            transform.scaleX *= groupChild.transform.scaleX;
+            transform.scaleY *= groupChild.transform.scaleY;
+            transform.transformOrder = mergeVector(groupChild.transform.transformOrder, transform.transformOrder);
+        }
+        else
+        {
+            transform = groupChild.transform;
+        }
+    }
+
+}
+
+
+void parseTransformChildforText(const string& transformStr, Transform& transform, groupChild& groupChild, Transform& trans)
+{
+    if (transformStr.find("matrix") != string::npos) {
+        parseTransformMatrix(transformStr, transform);
+    }
+    else {
+        parseTransform(transformStr, transform);
+
+        if (!transformStr.empty())
+        {
+            trans.translateX = transform.translateX;
+            trans.translateY = transform.translateY;
+            trans.rotateAngle = transform.rotateAngle;
+            trans.scaleX = transform.scaleX;
+            trans.scaleY = transform.scaleY;
+
+            transform.translateX += groupChild.transform.translateX;
+            transform.translateY += groupChild.transform.translateY;
+            transform.rotateAngle += groupChild.transform.rotateAngle;
+            transform.rotateAngle = (transform.rotateAngle > 360) ? (transform.rotateAngle - 360) : transform.rotateAngle;
+            transform.scaleX *= groupChild.transform.scaleX;
+            transform.scaleY *= groupChild.transform.scaleY;
+            transform.transformOrder = mergeVector(groupChild.transform.transformOrder, transform.transformOrder);
+        }
+        else
+        {
+            transform = groupChild.transform;
+        }
+    }
+
+}
