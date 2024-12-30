@@ -561,3 +561,123 @@ GraphicsState Shape::TransformSVG(Graphics& graphics, Transform transform)
     graphics.MultiplyTransform(&transformMatrix);
     return state;
 }
+
+
+
+void parseTransform(const string& transformStr, Transform& transform)
+{
+    transform.transformOrder.clear();
+    string transformString = transformStr;
+    transformString = standardize(transformString);
+    vector<string> transformDeli = split(transformString, ' ');
+    for (string& deli : transformDeli)
+    {
+        if (containsKeyword(deli, "rotate"))
+        {
+            transform.transformOrder.push_back("rotate");
+        }
+        else if (containsKeyword(deli, "scale"))
+        {
+            transform.transformOrder.push_back("scale");
+        }
+        else if (containsKeyword(deli, "translate"))
+        {
+            transform.transformOrder.push_back("translate");
+        }
+    }
+
+    // X? lý translate
+    smatch translateMatches;
+    regex translateRegex("translate\\(([^,]+),([^)]+)\\)");
+    if (regex_search(transformString, translateMatches, translateRegex))
+    {
+        transform.translateX = stof(translateMatches[1]);
+        transform.translateY = stof(translateMatches[2]);
+    }
+    // X? lý rotate
+    regex rotateRegex("rotate\\(([^)]+)\\)");
+    smatch rotateMatches;
+    if (regex_search(transformString, rotateMatches, rotateRegex))
+    {
+        transform.rotateAngle = stof(rotateMatches[1]);
+    }
+    // X? lý scale
+    bool check = false;
+    regex scaleCheck("scale\\((.*?)\\)");
+    smatch scaleCheckMatches;
+    regex scaleRegex("scale\\(([^,]+)(?:,([^)]+))?\\)");
+    smatch scaleMatches;
+
+    if (regex_search(transformString, scaleCheckMatches, scaleCheck))
+    {
+        string scalePart = scaleCheckMatches[1];
+        if (scalePart.find(",") != string::npos)
+            check = true;
+    }
+
+    if (regex_search(transformString, scaleMatches, scaleRegex))
+    {
+
+        float num1 = stof(scaleMatches[1].str());
+        if (check)
+        {
+            float num2 = stof(scaleMatches[2].str());
+            transform.scaleX = num1;
+            transform.scaleY = num2;
+        }
+        else
+        {
+            checkScale = true;
+            transform.scaleY = num1;
+            transform.scaleX = num1;
+        }
+    }
+}
+
+void parseTransformMatrix(const string& transformStr, Transform& transform) {
+    regex matrixRegex("matrix\\((.*?)\\)");
+    smatch matrixMatches;
+    if (regex_search(transformStr, matrixMatches, matrixRegex)) {
+        string matrixStr = matrixMatches[1].str();
+        double skewX, skewY;
+        istringstream iss(matrixStr);
+        iss >> transform.scaleX >> transform.skewX >> transform.skewY >> transform.scaleY >> transform.translateX >> transform.translateY;
+        if (transform.scaleX != 1.0 && transform.scaleY != 1.0)
+            transform.transformOrder.push_back("scale");
+        if (transform.skewX != 0.0 && transform.skewY != 0.0)
+            transform.transformOrder.push_back("skew");
+        if (transform.translateX != 0.0 && transform.translateY != 0.0)
+            transform.transformOrder.push_back("translate");
+    }
+
+}
+
+vector<string> mergeVector(vector<string> v1, vector<string> v2)
+{
+    vector<string> v3;
+
+    for (string s : v1)
+    {
+        bool found = false;
+        for (string x : v2)
+        {
+            if (s == x)
+            {
+                found = true;
+
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            v3.push_back(s);
+        }
+    }
+
+    for (string s : v2)
+    {
+        v3.push_back(s);
+    }
+    return v3;
+}
