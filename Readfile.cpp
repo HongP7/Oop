@@ -459,3 +459,105 @@ void convertStyleChild(string styleString, string& fill, string& stroke, RGB& fi
         strokeWidth = groupChild.strokeWidth;
     }
 }
+
+void convertStyleGradient(string styleString, string& id, string& gradientUnits, string& spreadMethod) {
+    int posId = styleString.find("id:");
+    int posGradientUnits = styleString.find("gradientUnits:");
+    int posSpreadMethod = styleString.find("spreadMethod:");
+    if (posId != string::npos) {
+        size_t idEnd = styleString.find(";", posId);
+        id = styleString.substr(posId + 3, idEnd - posId - 3);
+    }
+    if (posGradientUnits != string::npos) {
+        size_t gradientUnitsEnd = styleString.find(";", posGradientUnits);
+        gradientUnits = styleString.substr(posGradientUnits + 14, gradientUnitsEnd - posGradientUnits - 14);
+    }
+    if (posSpreadMethod != string::npos) {
+        size_t spreadMethodEnd = styleString.find(";", posSpreadMethod);
+        spreadMethod = styleString.substr(posSpreadMethod + 13, spreadMethodEnd - posSpreadMethod - 13);
+    }
+}
+
+vector<string> split(string& s, char deli)
+{
+    vector<string> tokens;
+    istringstream tokenStream(s);
+    string token;
+    while (getline(tokenStream, token, deli))
+    {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+bool containsKeyword(string& s, string keyword)
+{
+    return s.find(keyword) != string::npos;
+}
+
+string standardize(string transform)
+{
+    string result;
+
+    int pos = 0;
+    while (pos < transform.length())
+    {
+        int open = transform.find("(", pos);
+        if (open == string::npos)
+            break;
+
+        int close = transform.find(")", open);
+        if (close == string::npos)
+            break;
+
+        string content = transform.substr(open + 1, close - open - 1);
+
+        if (content.find(",") == string::npos)
+        {
+            int space = content.find(" ");
+            if (space != string::npos)
+            {
+                content.insert(space, ",");
+            }
+        }
+
+        result += transform.substr(pos, open - pos + 1);
+        result += content;
+        result += ")";
+
+        pos = close + 1;
+    }
+
+    result += transform.substr(pos);
+
+    return result;
+}
+
+GraphicsState Shape::TransformSVG(Graphics& graphics, Transform transform)
+{
+    GraphicsState state = graphics.Save();
+    Matrix transformMatrix;
+
+    for (const string& operation : transform.transformOrder)
+    {
+        if (operation == "scale")
+            if (checkScale)
+                transformMatrix.Scale(transform.scaleX, transform.scaleX);
+            else
+                transformMatrix.Scale(transform.scaleX, transform.scaleY);
+        else if (operation == "translate")
+            transformMatrix.Translate(transform.translateX, transform.translateY);
+        else if (operation == "rotate")
+            transformMatrix.Rotate(transform.rotateAngle);
+        else if (operation == "skew")
+        {
+            float skewX = tan(transform.skewX * static_cast<float>(M_PI) / 180.0f);
+            float skewY = tan(transform.skewY * static_cast<float>(M_PI) / 180.0f);
+
+            Matrix skewMatrix(1.0f, skewY, skewX, 1.0f, 0.0f, 0.0f);
+            transformMatrix.Multiply(&skewMatrix);
+        }
+    }
+    graphics.MultiplyTransform(&transformMatrix);
+    return state;
+}
