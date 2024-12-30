@@ -1,35 +1,45 @@
-#include "Viewbox.h"
+#include "ViewBox.h"
 #include <iostream>
 
-ViewBox::ViewBox(float width, float height, float scale)
-    : width(width), height(height), scale(scale) {}
+ViewBox::ViewBox(float x, float y, 
+                 float width_in, float height_in, 
+                 float width_out, float height_out, 
+                 bool check_viewbox, float scale)
+    : x(x), y(y), width_in(width_in), height_in(height_in), 
+      width_out(width_out), height_out(height_out), 
+      check_viewbox(check_viewbox), scale(scale) {}
 
-float ViewBox::getWidth() const {
-    return width;
+float ViewBox::getScale() const { 
+    return scale; 
 }
 
-float ViewBox::getHeight() const {
-    return height;
+float ViewBox::getWidthOut() const { 
+    return width_out; 
 }
 
-float ViewBox::getScale() const {
-    return scale;
+float ViewBox::getHeightOut() const { 
+    return height_out; 
 }
 
-void ViewBox::setWidth(float newWidth) {
-    width = newWidth;
+float ViewBox::getWidthIn() const { 
+    return width_in; 
 }
 
-void ViewBox::setHeight(float newHeight) {
-    height = newHeight;
+float ViewBox::getHeightIn() const { 
+    return height_in; 
 }
 
-void ViewBox::setScale(float newScale) {
-    scale = newScale;
+bool ViewBox::getcheck() const { 
+    return check_viewbox; 
 }
 
 void ViewBox::DrawViewBox() const {
-    std::cout << "Drawing ViewBox with width: " << width
-              << ", height: " << height
-              << ", and scale: " << scale << std::endl;
+    if (check_viewbox) {
+        std::cout << "Drawing ViewBox at (" << x << ", " << y 
+                  << ") with dimensions: " << width_in << "x" << height_in 
+                  << " (input) and " << width_out << "x" << height_out 
+                  << " (output), scale: " << scale << std::endl;
+    } else {
+        std::cout << "ViewBox is disabled." << std::endl;
+    }
 }
