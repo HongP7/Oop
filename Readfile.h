@@ -1,6 +1,7 @@
 #ifndef Readfile_h
 #define Readfile_h
 
+#define _USE_MATH_DEFINES
 #include "Defs.h"
 #include "Group.h"
 #include "Path.h"
