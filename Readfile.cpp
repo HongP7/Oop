@@ -741,3 +741,79 @@ void parseTransformChildforText(const string& transformStr, Transform& transform
     }
 
 }
+
+
+void parseFillAttributes(const pugi::xml_node& node, const GroupChild& groupChild, 
+                        string& fill, float& fillOpacity, RGB& fillRGB, 
+                        const regex& rgbRegex, smatch& matches) {
+    fillOpacity = node.attribute("fill-opacity").empty()
+        ? groupChild.fillOpacity
+        : node.attribute("fill-opacity").as_float();
+    fill = node.attribute("fill").value();
+
+    if (fill == "none") {
+        fillOpacity = 0;
+        fillRGB = {255, 255, 255};
+    } else if (!fill.empty()) {
+        convert_String_to_RGB_(fillRGB, fill, matches, rgbRegex);
+    } else {
+        fillRGB = groupChild.fillRGB;
+    }
+}
+
+void parseStrokeAttributes(const pugi::xml_node& node, const GroupChild& groupChild, 
+                          string& stroke, float& strokeOpacity, float& strokeWidth, 
+                          RGB& strokeRGB, const regex& rgbRegex, smatch& matches) {
+    strokeOpacity = node.attribute("stroke-opacity").empty()
+        ? groupChild.strokeOpacity
+        : node.attribute("stroke-opacity").as_float();
+    stroke = node.attribute("stroke").value();
+
+    if (stroke == "none") {
+        strokeOpacity = 0;
+        strokeRGB = {255, 255, 255};
+    } else if (!stroke.empty()) {
+        convert_String_to_RGB_(strokeRGB, stroke, matches, rgbRegex);
+    } else {
+        strokeRGB = groupChild.strokeRGB;
+    }
+
+    strokeWidth = node.attribute("stroke-width").empty()
+        ? groupChild.strokeWidth
+        : node.attribute("stroke-width").as_float();
+}
+
+Transform parseTransformAttributes(const pugi::xml_node& node, const GroupChild& groupChild) {
+    string transformValue = node.attribute("transform").value();
+    Transform transform = {0, 0, 0, 1.0, 1.0};
+    parseTransformChild(transformValue, transform, groupChild);
+    return transform;
+}
+
+void processPathNode(const pugi::xml_node& node, const GroupChild& groupChild, 
+                     vector<Element*>& elements, const regex& rgbRegex, smatch& matches) {
+    string fill, stroke;
+    float fillOpacity, strokeOpacity, strokeWidth;
+    RGB fillRGB, strokeRGB;
+
+    // Parse attributes
+    parseFillAttributes(node, groupChild, fill, fillOpacity, fillRGB, rgbRegex, matches);
+    parseStrokeAttributes(node, groupChild, stroke, strokeOpacity, strokeWidth, strokeRGB, rgbRegex, matches);
+    Transform transform = parseTransformAttributes(node, groupChild);
+
+    // Parse path data
+    string pathData = node.attribute("d").value();
+    if (!pathData.empty()) {
+        Path_* path = new Path_(pathData, fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, fill, stroke);
+        elements.push_back(path);
+    }
+}
+
+void parseNode(const pugi::xml_node& node, GroupChild groupChild, vector<Element*>& elements, 
+               const regex& rgbRegex, smatch& matches) {
+    string nodeName = node.name();
+    if (nodeName == "path") {
+        processPathNode(node, groupChild, elements, rgbRegex, matches);
+    }
+    // Add support for other node types here if needed.
+}
