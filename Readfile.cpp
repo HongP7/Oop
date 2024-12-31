@@ -1,4 +1,7 @@
 #include "ReadFile.h"
+#include <sstream>
+#include <map>
+#include <cmath> // Bao gồm thư viện cmath để sử dụng hàm toán học 
 
 bool checkScale = false;
 
@@ -32,44 +35,36 @@ string chuanhoa(string input)
     }
     return oss.str();
 }
-
-void getNextNumberOfValues(string& s, int& i, int num, Path& path, char curType)
-{
-    int count = 0;
-    for (int j = 0; j < num; ++j)
-    {
-        if (isdigit(s[i]) || s[i] == '-' || s[i] == '.' || s[i] == ' ')
-        {
-            size_t next_pos;
-            double num_ = stod(s.substr(i), &next_pos);
-            path.value.push_back(num_);
-            i += next_pos;
+void getNextNumberOfValues(string& s, int& i, int num, ClassPath& path, char curType) {
+    istringstream iss(s.substr(i));
+    float value;
+    int next_pos = 0;
+    while (num-- > 0 && iss >> value) {
+        path.addValue(value);
+        next_pos = iss.tellg(); // Cập nhật vị trí tiếp theo
+        if (iss.peek() == ' ' || iss.peek() == ',') {
+            iss.ignore();
         }
     }
-    path.type.push_back(curType);
+    i += next_pos; // Cập nhật vị trí i sau khi thêm các giá trị
+    path.addType(curType); // Thêm kiểu hiện tại
 }
 
-void convertPathToValue(string s, Path& path)
-{
+void convertPathToValue(string s, ClassPath& path) {
     char currentCommand = '\0';
-    path.type.clear();
-    path.value.clear();
+    path.clear(); // Xóa các giá trị trong `types` và `values` thông qua phương thức `clear`
 
     bool passM = false;
     s = chuanhoa(s);
     int i = 0;
-    while (i < s.length())
-    {
-        if (isalpha(s[i]))
-        {
-
+    while (i < s.length()) {
+        if (isalpha(s[i])) {
             currentCommand = s[i];
-            if (currentCommand == 'M' || currentCommand == 'm' && !passM)
+            if ((currentCommand == 'M' || currentCommand == 'm') && !passM)
                 passM = true;
             i++;
 
-            switch (currentCommand)
-            {
+            switch (currentCommand) {
             case 'M':
             case 'm':
                 getNextNumberOfValues(s, i, 2, path, currentCommand);
@@ -106,15 +101,13 @@ void convertPathToValue(string s, Path& path)
                 break;
             }
         }
-        else
-        {
+        else {
             if (currentCommand == 'm' && passM)
                 currentCommand = 'l';
             else if (currentCommand == 'M' && passM)
                 currentCommand = 'L';
             i++;
-            switch (currentCommand)
-            {
+            switch (currentCommand) {
             case 'M':
             case 'm':
                 getNextNumberOfValues(s, i, 2, path, currentCommand);
@@ -153,8 +146,7 @@ void convertPathToValue(string s, Path& path)
         }
         if (s[i] == ' ')
             i++;
-        if (s[i] >= '0' && s[i] <= '9' || s[i] == '-' || s[i] == '.')
-        {
+        if ((s[i] >= '0' && s[i] <= '9') || s[i] == '-' || s[i] == '.') {
             i--;
         }
     }
@@ -165,7 +157,6 @@ string toLower(string s)
     transform(s.begin(), s.end(), s.begin(), ::tolower);
     return s;
 }
-
 void convert_letters_to_RGB(RGB& rgb, string s)
 {
     map<string, RGB> colorMap =
