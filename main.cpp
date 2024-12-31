@@ -1,5 +1,5 @@
 #include "Readfile.h"
-string filename = "svg-19.svg";
+string filename = "sample.svg";
 
 
 float zoomScale = 1.0f;

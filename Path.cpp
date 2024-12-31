@@ -8,9 +8,31 @@
 #endif
 
 ClassPath::ClassPath(const std::string& pathData, const Transform& transform)
-    : Shape(), pathData(pathData) {
-    this->transform = transform;
+    : Shape(), pathData(pathData), transform(transform) {
     convertPathToValue();
+}
+
+ClassPath::ClassPath(float fillOpacity, float strokeOpacity, float strokeWidth, RGB fillRGB, RGB strokeRGB, Transform transform, Path path, const std::string& fill, const std::string& stroke, float strokeDasharray, float strokeDashoffset)
+    : Shape(), path(path), fillOpacity(fillOpacity), strokeOpacity(strokeOpacity), strokeWidth(strokeWidth), fillRGB(fillRGB), strokeRGB(strokeRGB), transform(transform), fill(fill), stroke(stroke), strokeDasharray(strokeDasharray), strokeDashoffset(strokeDashoffset) {
+    // Không cần khởi tạo lại thành viên cơ sở Shape ở đây
+}
+
+void convertPathToValue(const std::string& pathData, Path& path) {
+    std::istringstream iss(pathData);
+    char type;
+    float value;
+    while (iss >> type) {
+        path.types.push_back(type);
+        while (iss >> value) {
+            path.values.push_back(value);
+            if (iss.peek() == ' ' || iss.peek() == ',') {
+                iss.ignore();
+            }
+            else {
+                break;
+            }
+        }
+    }
 }
 
 void ClassPath::convertPathToValue() {
@@ -21,10 +43,12 @@ void ClassPath::convertPathToValue() {
         types.push_back(type);
         while (iss >> value) {
             values.push_back(value);
-            if (iss.peek() == ' ' || iss.peek() == ',')
+            if (iss.peek() == ' ' || iss.peek() == ',') {
                 iss.ignore();
-            else
+            }
+            else {
                 break;
+            }
         }
     }
 }
@@ -42,54 +66,56 @@ void ClassPath::clear() {
     types.clear();
 }
 
+// Các phương thức và hàm khác...
+
 void ClassPath::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
     GraphicsState state = TransformSVG(graphics, transform);
     GraphicsPath pathToDraw;
 
     size_t valueIndex = 0;
     PointF lastPoint(0, 0), controlPoint(0, 0);
-    for (char type : types) {
+    for (char type : path.types) {
         switch (type) {
         case 'M':
         case 'm':
             pathToDraw.StartFigure();
-            lastPoint = PointF(values[valueIndex], values[valueIndex + 1]);
+            lastPoint = PointF(path.values[valueIndex], path.values[valueIndex + 1]);
             valueIndex += 2;
             break;
         case 'L':
         case 'l':
-            pathToDraw.AddLine(lastPoint, PointF(values[valueIndex], values[valueIndex + 1]));
-            lastPoint = PointF(values[valueIndex], values[valueIndex + 1]);
+            pathToDraw.AddLine(lastPoint, PointF(path.values[valueIndex], path.values[valueIndex + 1]));
+            lastPoint = PointF(path.values[valueIndex], path.values[valueIndex + 1]);
             valueIndex += 2;
             break;
         case 'H':
         case 'h':
             if (type == 'H')
-                pathToDraw.AddLine(lastPoint, PointF(values[valueIndex], lastPoint.Y));
+                pathToDraw.AddLine(lastPoint, PointF(path.values[valueIndex], lastPoint.Y));
             else
-                pathToDraw.AddLine(lastPoint, PointF(lastPoint.X + values[valueIndex], lastPoint.Y));
-            lastPoint = PointF(values[valueIndex], lastPoint.Y);
+                pathToDraw.AddLine(lastPoint, PointF(lastPoint.X + path.values[valueIndex], lastPoint.Y));
+            lastPoint = PointF(path.values[valueIndex], lastPoint.Y);
             valueIndex += 1;
             break;
         case 'V':
         case 'v':
             if (type == 'V')
-                pathToDraw.AddLine(lastPoint, PointF(lastPoint.X, values[valueIndex]));
+                pathToDraw.AddLine(lastPoint, PointF(lastPoint.X, path.values[valueIndex]));
             else
-                pathToDraw.AddLine(lastPoint, PointF(lastPoint.X, lastPoint.Y + values[valueIndex]));
-            lastPoint = PointF(lastPoint.X, values[valueIndex]);
+                pathToDraw.AddLine(lastPoint, PointF(lastPoint.X, lastPoint.Y + path.values[valueIndex]));
+            lastPoint = PointF(lastPoint.X, path.values[valueIndex]);
             valueIndex += 1;
             break;
         case 'C':
         case 'c':
             pathToDraw.AddBezier(
                 static_cast<REAL>(lastPoint.X), static_cast<REAL>(lastPoint.Y),
-                static_cast<REAL>(values[valueIndex]), static_cast<REAL>(values[valueIndex + 1]),
-                static_cast<REAL>(values[valueIndex + 2]), static_cast<REAL>(values[valueIndex + 3]),
-                static_cast<REAL>(values[valueIndex + 4]), static_cast<REAL>(values[valueIndex + 5])
+                static_cast<REAL>(path.values[valueIndex]), static_cast<REAL>(path.values[valueIndex + 1]),
+                static_cast<REAL>(path.values[valueIndex + 2]), static_cast<REAL>(path.values[valueIndex + 3]),
+                static_cast<REAL>(path.values[valueIndex + 4]), static_cast<REAL>(path.values[valueIndex + 5])
             );
-            lastPoint = PointF(values[valueIndex + 4], values[valueIndex + 5]);
-            controlPoint = PointF(values[valueIndex + 2], values[valueIndex + 3]);
+            lastPoint = PointF(path.values[valueIndex + 4], path.values[valueIndex + 5]);
+            controlPoint = PointF(path.values[valueIndex + 2], path.values[valueIndex + 3]);
             valueIndex += 6;
             break;
         case 'S':
@@ -97,23 +123,22 @@ void ClassPath::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
             pathToDraw.AddBezier(
                 static_cast<REAL>(lastPoint.X), static_cast<REAL>(lastPoint.Y),
                 static_cast<REAL>(2 * lastPoint.X - controlPoint.X), static_cast<REAL>(2 * lastPoint.Y - controlPoint.Y),
-                static_cast<REAL>(values[valueIndex]), static_cast<REAL>(values[valueIndex + 1]),
-                static_cast<REAL>(values[valueIndex + 2]), static_cast<REAL>(values[valueIndex + 3])
+                static_cast<REAL>(path.values[valueIndex]), static_cast<REAL>(path.values[valueIndex + 1]),
+                static_cast<REAL>(path.values[valueIndex + 2]), static_cast<REAL>(path.values[valueIndex + 3])
             );
-            lastPoint = PointF(values[valueIndex + 2], values[valueIndex + 3]);
-            controlPoint = PointF(values[valueIndex], values[valueIndex + 1]);
+            lastPoint = PointF(path.values[valueIndex + 2], path.values[valueIndex + 3]);
+            controlPoint = PointF(path.values[valueIndex], path.values[valueIndex + 1]);
             valueIndex += 4;
             break;
         case 'Q':
         case 'q':
         {
-            // Chuyển đổi quadratic Bezier curve thành cubic Bezier curve
             float x1 = lastPoint.X;
             float y1 = lastPoint.Y;
-            float x2 = values[valueIndex];
-            float y2 = values[valueIndex + 1];
-            float x3 = values[valueIndex + 2];
-            float y3 = values[valueIndex + 3];
+            float x2 = path.values[valueIndex];
+            float y2 = path.values[valueIndex + 1];
+            float x3 = path.values[valueIndex + 2];
+            float y3 = path.values[valueIndex + 3];
 
             float c1x = x1 + 2.0f / 3.0f * (x2 - x1);
             float c1y = y1 + 2.0f / 3.0f * (y2 - y1);
@@ -134,19 +159,19 @@ void ClassPath::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
         }
         case 'T':
         case 't':
-            pathToDraw.AddLine(lastPoint, PointF(values[valueIndex], values[valueIndex + 1]));
-            lastPoint = PointF(values[valueIndex], values[valueIndex + 1]);
+            pathToDraw.AddLine(lastPoint, PointF(path.values[valueIndex], path.values[valueIndex + 1]));
+            lastPoint = PointF(path.values[valueIndex], path.values[valueIndex + 1]);
             valueIndex += 2;
             break;
         case 'A':
         case 'a':
         {
-            float rx = values[valueIndex];
-            float ry = values[valueIndex + 1];
-            float xAxisRotation = values[valueIndex + 2];
-            bool largeArcFlag = values[valueIndex + 3] != 0;
-            bool sweepFlag = values[valueIndex + 4] != 0;
-            PointF endPoint(values[valueIndex + 5], values[valueIndex + 6]);
+            float rx = path.values[valueIndex];
+            float ry = path.values[valueIndex + 1];
+            float xAxisRotation = path.values[valueIndex + 2];
+            bool largeArcFlag = path.values[valueIndex + 3] != 0;
+            bool sweepFlag = path.values[valueIndex + 4] != 0;
+            PointF endPoint(path.values[valueIndex + 5], path.values[valueIndex + 6]);
 
             if (type == 'a') {
                 endPoint.X += lastPoint.X;
@@ -279,4 +304,21 @@ void ClassPath::AddArc(GraphicsPath& pathToDraw, float cx, float cy, float rx, f
     }
 
     pathToDraw.AddArc(cx - rx, cy - ry, 2 * rx, 2 * ry, startAngle * (180.0 / M_PI), deltaAngle * (180.0 / M_PI));
+}
+void convertPathToValue(const std::string& pathData, Path& path) {
+    std::istringstream iss(pathData);
+    char type;
+    float value;
+    while (iss >> type) {
+        path.types.push_back(type);
+        while (iss >> value) {
+            path.values.push_back(value);
+            if (iss.peek() == ' ' || iss.peek() == ',') {
+                iss.ignore();
+            }
+            else {
+                break;
+            }
+        }
+    }
 }

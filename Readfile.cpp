@@ -524,24 +524,21 @@ string standardize(string transform)
     return result;
 }
 
-GraphicsState Shape::TransformSVG(Graphics& graphics, Transform transform)
-{
+GraphicsState Shape::TransformSVG(Graphics& graphics, Transform transform) {
     GraphicsState state = graphics.Save();
     Matrix transformMatrix;
 
-    for (const string& operation : transform.transformOrder)
-    {
+    for (const std::string& operation : transform.transformOrder) {
         if (operation == "scale")
-            if (checkScale)
-                transformMatrix.Scale(transform.scaleX, transform.scaleX);
+            if (transform.scaleX == transform.scaleY)
+                transformMatrix.Scale(transform.scaleX, transform.scaleY);
             else
                 transformMatrix.Scale(transform.scaleX, transform.scaleY);
         else if (operation == "translate")
             transformMatrix.Translate(transform.translateX, transform.translateY);
         else if (operation == "rotate")
             transformMatrix.Rotate(transform.rotateAngle);
-        else if (operation == "skew")
-        {
+        else if (operation == "skew") {
             float skewX = tan(transform.skewX * static_cast<float>(M_PI) / 180.0f);
             float skewY = tan(transform.skewY * static_cast<float>(M_PI) / 180.0f);
 
@@ -552,6 +549,7 @@ GraphicsState Shape::TransformSVG(Graphics& graphics, Transform transform)
     graphics.MultiplyTransform(&transformMatrix);
     return state;
 }
+
 
 
 

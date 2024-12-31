@@ -1,4 +1,4 @@
-#ifndef DEFS_H
+﻿#ifndef DEFS_H
 #define DEFS_H
 
 #include <iostream>
@@ -14,10 +14,9 @@ using namespace Gdiplus;
 
 #include <map>
 #include <cmath>
-
 #include "rapidxml.hpp"
 #include "pugixml.hpp"
-// GDI+
+#include "Transform.h" // Bao gồm Transform.h
 #include <winsock2.h>
 #include <objidl.h>
 #include <regex>
@@ -30,19 +29,12 @@ struct RGB {
     int r, g, b;
 };
 
-struct Transform {
-    float translateX, translateY, rotateAngle, scaleX, scaleY;
-    float skewX, skewY;
-    vector<string> transformOrder;
-};
-
 struct groupChild {
     float fontSize;
     float strokeOpacity, fillOpacity, strokeWidth;
     RGB strokeRGB, fillRGB;
     Transform transform;
 };
-
 
 struct pointLinearGradient {
     float x1, x2, y1, y2;
@@ -114,6 +106,6 @@ public:
     float getfy();
     string getxlink();
     Transform gettransform();
-
 };
+
 #endif // !DEFS_H

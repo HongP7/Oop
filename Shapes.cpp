@@ -5,16 +5,20 @@ Shape::Shape() {}
 Shape::Shape(vector<string> transformOrder)
     : fillOpacity(1.0f), strokeOpacity(1.0f), strokeWidth(1.0f),
     fillRGB({ 255, 255, 255 }), strokeRGB({ 0, 0, 0 }),
-    transform({ 0, 0, 0, 1.0f, 1.0f, 0, 0, transformOrder }) {}
+    transform({ 0, 0, 0, 1.0f, 1.0f, 0, 0, transformOrder }) {
+}
 
 Shape::Shape(float strokeOpacity, RGB strokeRGB, float strokeWidth, Transform transform, string stroke)
-    : strokeOpacity(strokeOpacity), strokeRGB(strokeRGB), strokeWidth(strokeWidth), transform(transform), stroke(stroke) {}
+    : strokeOpacity(strokeOpacity), strokeRGB(strokeRGB), strokeWidth(strokeWidth), transform(transform), stroke(stroke) {
+}
 
 Shape::Shape(RGB fillRGB, RGB strokeRGB, float fillOpacity, float strokeOpacity, float strokeWidth, Transform transform, string fill, string stroke)
-    : fillRGB(fillRGB), strokeRGB(strokeRGB), fillOpacity(fillOpacity), strokeOpacity(strokeOpacity), strokeWidth(strokeWidth), transform(transform), fill(fill), stroke(stroke) {}
+    : fillRGB(fillRGB), strokeRGB(strokeRGB), fillOpacity(fillOpacity), strokeOpacity(strokeOpacity), strokeWidth(strokeWidth), transform(transform), fill(fill), stroke(stroke) {
+}
 
 Ellipse_::Ellipse_(float cx, float cy, float rx, float ry, float fillOpacity, float strokeOpacity, float strokeWidth, RGB fillRGB, RGB strokeRGB, Transform transform, string fill, string stroke)
-    : Shape(fillRGB, strokeRGB, fillOpacity, strokeOpacity, strokeWidth, transform, fill, stroke), cx(cx), cy(cy), rx(rx), ry(ry) {}
+    : Shape(fillRGB, strokeRGB, fillOpacity, strokeOpacity, strokeWidth, transform, fill, stroke), cx(cx), cy(cy), rx(rx), ry(ry) {
+}
 
 
 // Ellipse_
@@ -68,7 +72,8 @@ void Ellipse_::Draw(Graphics& graphics, vector<Defs*>& defs) {
 
 // Circle
 Circle::Circle(float cx, float cy, float r, float fillOpacity, float strokeOpacity, RGB fillRGB, RGB strokeRGB, float strokeWidth, Transform transform, string fill, string stroke)
-    : Ellipse_(cx, cy, r, r, fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, fill, stroke), r(r) {}
+    : Ellipse_(cx, cy, r, r, fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, fill, stroke), r(r) {
+}
 
 void Circle::Draw(Graphics& graphics, vector<Defs*>& defs) {
     SolidBrush circleBrush(Color(255 * fillOpacity, fillRGB.r, fillRGB.g, fillRGB.b));
@@ -108,14 +113,15 @@ void Circle::Draw(Graphics& graphics, vector<Defs*>& defs) {
             delete[] positions;
         }
     }
-    else 
+    else
         graphics.FillEllipse(&circleBrush, cx - r, cy - r, 2 * r, 2 * r);
     graphics.Restore(state);
 }
 
 // Rectangle_
 Rectangle_::Rectangle_(float x, float y, float width, float height, float fillOpacity, float strokeOpacity, RGB fillRGB, RGB strokeRGB, float strokeWidth, Transform transform, string fill, string stroke)
-    : Shape(fillRGB, strokeRGB, fillOpacity, strokeOpacity, strokeWidth, transform, fill, stroke), x(x), y(y), width(width), height(height) {}
+    : Shape(fillRGB, strokeRGB, fillOpacity, strokeOpacity, strokeWidth, transform, fill, stroke), x(x), y(y), width(width), height(height) {
+}
 
 void Rectangle_::Draw(Graphics& graphics, vector<Defs*>& defs) {
     SolidBrush RectBrush(Color(255 * fillOpacity, fillRGB.r, fillRGB.g, fillRGB.b));
@@ -123,7 +129,7 @@ void Rectangle_::Draw(Graphics& graphics, vector<Defs*>& defs) {
     GraphicsState state = TransformSVG(graphics, transform);
     graphics.DrawRectangle(&RectBorderPen, x, y, width, height);
     if (fill != "") {
-        LinearGradient* linearGradient = nullptr; 
+        LinearGradient* linearGradient = nullptr;
         vector<LinearGradient*> vectorlinear = defs[0]->getlinear();
         for (LinearGradient* lin : vectorlinear) {
             if (lin->getID() == fill) {
@@ -163,7 +169,8 @@ void Rectangle_::Draw(Graphics& graphics, vector<Defs*>& defs) {
 
 // Line
 Line::Line(float x1, float y1, float x2, float y2, float strokeOpacity, RGB strokeRGB, float strokeWidth, Transform transform, string stroke)
-    : Shape(strokeOpacity, strokeRGB, strokeWidth, transform, stroke), x1(x1), y1(y1), x2(x2), y2(y2) {}
+    : Shape(strokeOpacity, strokeRGB, strokeWidth, transform, stroke), x1(x1), y1(y1), x2(x2), y2(y2) {
+}
 
 void Line::Draw(Graphics& graphics, vector<Defs*>& defs) {
     GraphicsState state = TransformSVG(graphics, transform);
@@ -184,7 +191,7 @@ string Polygon_::standardization(string input) {
     bool first = true;
 
     while (iss >> word) {
-        if (!first) 
+        if (!first)
             oss << " ";
         oss << word;
         first = false;
