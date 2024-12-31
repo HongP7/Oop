@@ -1,44 +1,21 @@
 #ifndef TEXT_H
 #define TEXT_H
-
 #include "Shapes.h"
-#include <string>
-#include <vector>
 
-class Text_ : public Shape {
+class Text : public Shape
+{
 private:
-    float x, y;                     // Tọa độ của văn bản
-    std::string content;            // Nội dung văn bản
-    float fontSize;                 // Kích thước phông chữ
-    float fillOpacity;              // Độ mờ của màu lấp đầy
-    float strokeOpacity;            // Độ mờ của nét viền
-    float strokeWidth;              // Độ rộng của nét viền
-    std::string fontFamily;         // Gia đình phông chữ
-    float dx, dy;                   // Dịch chuyển văn bản
-    std::string textAnchor;         // Vị trí neo của văn bản
-    std::string fontStyle;          // Kiểu phông chữ (thường, nghiêng, đậm)
-    bool checkStroke;               // Kiểm tra có nét viền hay không
-    std::string fill, stroke;       // Gradient hoặc màu lấp đầy và nét viền
-      Transform trans;
+    float dx, dy;
+    float x, y, fontSize;
+    string content, fontFamily, textAnchor, fontStyle;
+    bool checkk;
+    Transform trans;
+
 public:
-    Text_() : x(0), y(0), content(""), fontSize(12.0f), fillOpacity(1.0f), strokeOpacity(1.0f),
-        strokeWidth(1.0f), fontFamily("Arial"), dx(0), dy(0), textAnchor("start"), fontStyle("normal"),
-        checkStroke(false), fill("black"), stroke("none") {}
-        Text_(float, float, const string&, float, float, float, float, RGB, RGB, Transform, const string&, float, float, string, string, bool, string, string, Transform);
-        
-
-    float getX() const;
-    float getY() const;
-    std::string getContent() const;
-    float getFontSize() const;
-    std::string getFontFamily() const;
-    std::string getFill() const;
-    std::string getStroke() const;
-
+    Text(float, float, const string&, float, float, float, float, RGB, RGB, Transform, const string&, float, float, string, string, bool, string, string, Transform);
     void Draw(Graphics&, vector<Defs*>&) override;
 };
 
 bool IsStringValidForFont(const wchar_t*, HFONT);
 string normalizeTextContent(string);
-
-#endif
+#endif // !TEXT_H
