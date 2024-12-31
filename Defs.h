@@ -1,42 +1,30 @@
 ﻿#ifndef DEFS_H
 #define DEFS_H
 
-#include <iostream>
-#include <vector>
-#include <sstream>
-#include <fstream>
-#include <string>
-#include <windows.h>
-#include <gdiplus.h>
-#pragma comment (lib,"Gdiplus.lib")
-using namespace std;
-using namespace Gdiplus;
+#include "Header.h"
 
-#include <map>
-#include <cmath>
-#include "rapidxml.hpp"
-#include "pugixml.hpp"
-#include "Transform.h" // Bao gồm Transform.h
-#include <winsock2.h>
-#include <objidl.h>
-#include <regex>
-#include <Windowsx.h>
-#include <locale>
-#include <codecvt>
-using namespace rapidxml;
-
-struct RGB {
+struct RGB
+{
     int r, g, b;
 };
 
-struct groupChild {
+struct Transform
+{
+    float translateX, translateY, rotateAngle, scaleX, scaleY;
+    float skewX , skewY;
+    vector<string> transformOrder;
+};
+struct groupChild
+{
     float fontSize;
     float strokeOpacity, fillOpacity, strokeWidth;
     RGB strokeRGB, fillRGB;
     Transform transform;
 };
 
-struct pointLinearGradient {
+
+struct pointLinearGradient
+{
     float x1, x2, y1, y2;
 };
 
@@ -55,8 +43,8 @@ public:
     int getstopColor_green();
     int getstopColor_blue();
 };
-
-class Gradient {
+class Gradient
+{
 protected:
     string id;
 public:
@@ -65,7 +53,8 @@ public:
     virtual string getID() = 0;
 };
 
-class Defs {
+class Defs
+{
 private:
     vector<LinearGradient*> LinearGradient_list;
     vector<RadialGradient*> RadialGradient_list;
@@ -76,7 +65,8 @@ public:
     vector<RadialGradient*> getradial();
 };
 
-class LinearGradient : public Gradient {
+class LinearGradient : public Gradient
+{
 private:
     pointLinearGradient point;
     vector<Stop*> stop_list;
@@ -89,7 +79,8 @@ public:
     Transform gettransform();
 };
 
-class RadialGradient : public Gradient {
+class RadialGradient : public Gradient
+{
 private:
     float cx, cy, r, fx, fy;
     string xlink_href;
@@ -106,6 +97,6 @@ public:
     float getfy();
     string getxlink();
     Transform gettransform();
-};
 
+};
 #endif // !DEFS_H

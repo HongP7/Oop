@@ -16,12 +16,12 @@ Shape::Shape(RGB fillRGB, RGB strokeRGB, float fillOpacity, float strokeOpacity,
     : fillRGB(fillRGB), strokeRGB(strokeRGB), fillOpacity(fillOpacity), strokeOpacity(strokeOpacity), strokeWidth(strokeWidth), transform(transform), fill(fill), stroke(stroke) {
 }
 
+
+// Ellipse_
 Ellipse_::Ellipse_(float cx, float cy, float rx, float ry, float fillOpacity, float strokeOpacity, float strokeWidth, RGB fillRGB, RGB strokeRGB, Transform transform, string fill, string stroke)
     : Shape(fillRGB, strokeRGB, fillOpacity, strokeOpacity, strokeWidth, transform, fill, stroke), cx(cx), cy(cy), rx(rx), ry(ry) {
 }
 
-
-// Ellipse_
 void Ellipse_::Draw(Graphics& graphics, vector<Defs*>& defs) {
     Pen ellipsePen(Color(255 * strokeOpacity, strokeRGB.r, strokeRGB.g, strokeRGB.b), strokeWidth);
     SolidBrush ellipseBrush(Color(255 * fillOpacity, fillRGB.r, fillRGB.g, fillRGB.b));
