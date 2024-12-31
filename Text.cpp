@@ -1,27 +1,16 @@
 ﻿#include "Text.h"
-#include <iostream>
-#include <algorithm>
-#include <string>
-Text_::Text_(float x, float y, const string& content, float fontSize, float fillOpacity, float strokeOpacity, float strokeWidth, RGB fillRGB, RGB strokeRGB, Transform transform, const string& fontFamily, float dx, float dy, string textAnchor, string fontStyle, bool checkStroke, string fill, string stroke, Transform trans)
-    : Shape(fillRGB, strokeRGB, fillOpacity, strokeOpacity, strokeWidth, transform, fill, stroke), x(x), y(y), fontSize(fontSize), content(content), fontFamily(fontFamily), dx(dx), dy(dy), fontStyle(fontStyle), textAnchor(textAnchor), checkStroke(checkStroke), trans(trans) {}
 
-float Text_::getX() const { return x; }
-float Text_::getY() const { return y; }
-std::string Text_::getContent() const { return content; }
-float Text_::getFontSize() const { return fontSize; }
-std::string Text_::getFontFamily() const { return fontFamily; }
-std::string Text_::getFill() const { return fill; }
-std::string Text_::getStroke() const { return stroke; }
 
-bool IsStringValidForFont(const wchar_t* str, HFONT hFont) {
+bool IsStringValidForFont(const wchar_t* str, HFONT hFont)
+{
     HDC hdc = GetDC(NULL);
     HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
 
-    TEXTMETRICW tm;
-    GetTextMetricsW(hdc, &tm);
+    TEXTMETRIC tm;
+    GetTextMetrics(hdc, &tm);
 
     SIZE textSize;
-    GetTextExtentPoint32W(hdc, str, wcslen(str), &textSize);
+    GetTextExtentPoint32(hdc, str, wcslen(str), &textSize);
 
     SelectObject(hdc, oldFont);
     ReleaseDC(NULL, hdc);
@@ -36,7 +25,11 @@ string normalizeTextContent(string content)
     return content;
 }
 
-void Text_::Draw(Graphics& graphics, vector<Defs*>& defs) {
+Text::Text(float x, float y, const string& content, float fontSize, float fillOpacity, float strokeOpacity, float strokeWidth, RGB fillRGB, RGB strokeRGB, Transform transform, const string& fontFamily, float dx, float dy, string textAnchor, string fontStyle, bool checkStroke, string fill, string stroke, Transform trans)
+    : Shape(fillRGB, strokeRGB, fillOpacity, strokeOpacity, strokeWidth, transform, fill, stroke), x(x), y(y), fontSize(fontSize), content(content), fontFamily(fontFamily), dx(dx), dy(dy), fontStyle(fontStyle), textAnchor(textAnchor), checkk(checkStroke), trans(trans) {}
+
+void Text::Draw(Graphics& graphics, vector<Defs*>& defs)
+{
     content = normalizeTextContent(content);
     GraphicsState state = TransformSVG(graphics, transform);
     wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
@@ -47,13 +40,15 @@ void Text_::Draw(Graphics& graphics, vector<Defs*>& defs) {
     bool isValid = false;
     HFONT hFont = NULL;
 
-    for (const wchar_t* fontName : fontList) {
-        hFont = CreateFontW(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+    for (const wchar_t* fontName : fontList)
+    {
+        hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fontName);
 
         isValid = IsStringValidForFont(wideFontFamily.c_str(), hFont);
 
-        if (isValid) {
+        if (isValid)
+        {
             break;
         }
 
@@ -61,15 +56,17 @@ void Text_::Draw(Graphics& graphics, vector<Defs*>& defs) {
         hFont = NULL;
     }
 
-    if (!isValid) {
+    if (!isValid)
+    {
         fontFamily = "Times New Roman";
         wideFontFamily = L"Times New Roman";
-        if (hFont) {
+        if (hFont)
+        {
             DeleteObject(hFont);
             hFont = NULL;
         }
 
-        hFont = CreateFontW(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+        hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Times New Roman");
     }
 
@@ -77,59 +74,77 @@ void Text_::Draw(Graphics& graphics, vector<Defs*>& defs) {
 
     PointF point;
     StringFormat stringFormat;
-    if (textAnchor == "start") {
+    if (textAnchor == "start")
+    {
         point = PointF(x + dx, y + dy - fontSize);
         stringFormat.SetAlignment(StringAlignmentNear);
         stringFormat.SetLineAlignment(StringAlignmentNear);
-    } else if (textAnchor == "middle") {
+    }
+    else if (textAnchor == "middle")
+    {
         point = PointF(x + dx - (fontSize / 2.0f) - trans.translateX / 2, y + dy - (fontSize / 2.0f) - trans.translateY / 2);
         stringFormat.SetAlignment(StringAlignmentCenter);
         stringFormat.SetLineAlignment(StringAlignmentCenter);
-    } else if (textAnchor == "end") {
+    }
+    else if (textAnchor == "end")
+    {
         point = PointF(x + dx, y + dy);
         stringFormat.SetAlignment(StringAlignmentFar);
         stringFormat.SetLineAlignment(StringAlignmentFar);
-    } else {
+    }
+    else
+    {
         point = PointF(x + dx - fontSize, y + dy - fontSize);
         stringFormat.SetAlignment(StringAlignmentNear);
         stringFormat.SetLineAlignment(StringAlignmentNear);
     }
-     wstring text(content.begin(), content.end());
-GraphicsPath path;
+    wstring text(content.begin(), content.end());
+
+    GraphicsPath path;
     if (fontStyle == "italic")
         path.AddString(text.c_str(), -1, &dynamicFontFamily, FontStyleItalic, fontSize, point, &stringFormat);
     else if (fontStyle == "bold")
         path.AddString(text.c_str(), -1, &dynamicFontFamily, FontStyleBold, fontSize, point, &stringFormat);
     else
         path.AddString(text.c_str(), -1, &dynamicFontFamily, FontStyleRegular, fontSize, point, &stringFormat);
- path.CloseFigure();
 
-    if (strokeWidth != 0) {
+    path.CloseFigure();
+
+    if (strokeWidth != 0)
+    {
         SolidBrush fillBrush(Color(fillRGB.r, fillRGB.g, fillRGB.b));
         Pen pen(Color(strokeRGB.r, strokeRGB.g, strokeRGB.b), strokeWidth);
-        if (checkStroke == 0) {
-            if (fill != "") {
+        if (checkk == 0)
+        {
+            if (fill != "")
+            {
                 LinearGradient* linearGradient = nullptr;
 
                 vector<LinearGradient*> vectorlinear = defs[0]->getlinear();
 
-                for (LinearGradient* lin : vectorlinear) {
-                    if (lin->getID() == fill) {
+                for (LinearGradient* lin : vectorlinear)
+                {
+
+                    if (lin->getID() == fill)
+                    {
                         linearGradient = lin;
                         break;
                     }
                 }
 
-                if (linearGradient != nullptr) {
+                if (linearGradient != nullptr)
+                {
                     vector<Stop*> StopList = linearGradient->getStopList();
                     Color* colors = new Color[StopList.size()];
 
-                    for (int i = 0; i < StopList.size(); ++i) {
+                    for (int i = 0; i < StopList.size(); ++i)
+                    {
                         colors[i] = Color(255 * StopList[i]->getstopOpacity(), StopList[i]->getstopColor_red(), StopList[i]->getstopColor_green(), StopList[i]->getstopColor_blue());
                     }
                     float* positions = new float[StopList.size()];
 
-                    for (size_t i = 0; i < StopList.size(); ++i) {
+                    for (size_t i = 0; i < StopList.size(); ++i)
+                    {
                         positions[i] = StopList[i]->getoffset();
                     }
 
@@ -144,35 +159,47 @@ GraphicsPath path;
                     delete[] colors;
                     delete[] positions;
                 }
-            } else {
+            }
+
+            else
+            {
                 graphics.FillPath(&fillBrush, &path);
-                if (strokeRGB.r != 255 && strokeRGB.g != 255 && strokeRGB.b != 255)
+                if(strokeRGB.r != 255 && strokeRGB.g != 255 && strokeRGB.b != 255)
                     graphics.DrawPath(&pen, &path);
             }
-        } else {
+        }
+        else
+        {
             graphics.DrawPath(&pen, &path);
-            if (fill != "") {
+            if (fill != "")
+            {
                 LinearGradient* linearGradient = nullptr;
 
                 vector<LinearGradient*> vectorlinear = defs[0]->getlinear();
 
-                for (LinearGradient* lin : vectorlinear) {
-                    if (lin->getID() == fill) {
+                for (LinearGradient* lin : vectorlinear)
+                {
+
+                    if (lin->getID() == fill)
+                    {
                         linearGradient = lin;
                         break;
                     }
                 }
 
-                if (linearGradient != nullptr) {
+                if (linearGradient != nullptr)
+                {
                     vector<Stop*> StopList = linearGradient->getStopList();
                     Color* colors = new Color[StopList.size()];
 
-                    for (int i = 0; i < StopList.size(); ++i) {
+                    for (int i = 0; i < StopList.size(); ++i)
+                    {
                         colors[i] = Color(255 * StopList[i]->getstopOpacity(), StopList[i]->getstopColor_red(), StopList[i]->getstopColor_green(), StopList[i]->getstopColor_blue());
                     }
                     float* positions = new float[StopList.size()];
 
-                    for (size_t i = 0; i < StopList.size(); ++i) {
+                    for (size_t i = 0; i < StopList.size(); ++i)
+                    {
                         positions[i] = StopList[i]->getoffset();
                     }
 
@@ -187,25 +214,35 @@ GraphicsPath path;
                     delete[] colors;
                     delete[] positions;
                 }
-            } else {
-                graphics.FillPath(&fillBrush, &path);
-                graphics.DrawPath(&pen, &path);
             }
+            else 
+            { 
+                graphics.FillPath(&fillBrush, &path);                
+                graphics.DrawPath(&pen, &path);
+           }
         }
-    } else {
+    }
+    else
+    {
         SolidBrush textBrush(Color(fillRGB.r, fillRGB.g, fillRGB.b));
-        if (fontStyle == "italic") {
+        if (fontStyle == "italic")
+        {
             Font font(&dynamicFontFamily, fontSize, FontStyleItalic, UnitPixel);
             graphics.DrawString(text.c_str(), -1, &font, point, &textBrush);
-        } else if (fontStyle == "bold") {
+        }
+        else if (fontStyle == "bold")
+        {
             Font font(&dynamicFontFamily, fontSize, FontStyleBold, UnitPixel);
             graphics.DrawString(text.c_str(), -1, &font, point, &textBrush);
-        } else {
+        }
+        else
+        {
             Font font(&dynamicFontFamily, fontSize, FontStyleRegular, UnitPixel);
             graphics.DrawString(text.c_str(), -1, &font, point, &textBrush);
         }
     }
-    if (hFont) {
+    if (hFont)
+    {
         DeleteObject(hFont);
         hFont = NULL;
     }
