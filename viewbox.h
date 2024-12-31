@@ -22,7 +22,7 @@ public:
     float getHeightIn() const;
     bool getcheck() const;
 
-    void DrawViewBox() const; // Vẽ hộp nhìn
+    void DrawViewBox() ; // Vẽ hộp nhìn
 };
 
 #endif

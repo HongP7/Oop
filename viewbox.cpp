@@ -33,13 +33,3 @@ bool ViewBox::getcheck() const {
     return check_viewbox; 
 }
 
-void ViewBox::DrawViewBox() const {
-    if (check_viewbox) {
-        std::cout << "Drawing ViewBox at (" << x << ", " << y 
-                  << ") with dimensions: " << width_in << "x" << height_in 
-                  << " (input) and " << width_out << "x" << height_out 
-                  << " (output), scale: " << scale << std::endl;
-    } else {
-        std::cout << "ViewBox is disabled." << std::endl;
-    }
-}

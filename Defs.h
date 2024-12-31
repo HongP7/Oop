@@ -12,6 +12,20 @@
 using namespace std;
 using namespace Gdiplus;
 
+#include <map>
+#include <cmath>
+
+#include "rapidxml.hpp"
+#include "pugixml.hpp"
+// GDI+
+#include <winsock2.h>
+#include <objidl.h>
+#include <regex>
+#include <Windowsx.h>
+#include <locale>
+#include <codecvt>
+using namespace rapidxml;
+
 struct RGB {
     int r, g, b;
 };

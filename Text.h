@@ -19,14 +19,13 @@ private:
     std::string fontStyle;          // Kiểu phông chữ (thường, nghiêng, đậm)
     bool checkStroke;               // Kiểm tra có nét viền hay không
     std::string fill, stroke;       // Gradient hoặc màu lấp đầy và nét viền
-
+    Transform trans;
 public:
     Text_() : x(0), y(0), content(""), fontSize(12.0f), fillOpacity(1.0f), strokeOpacity(1.0f),
         strokeWidth(1.0f), fontFamily("Arial"), dx(0), dy(0), textAnchor("start"), fontStyle("normal"),
         checkStroke(false), fill("black"), stroke("none") {}
-    Text_(float, float, std::string, float, float, float, float, std::string, float, float, 
-        std::string, std::string, bool, std::string, std::string);
-              
+    Text_(float, float, const string&, float, float, float, float, RGB, RGB, Transform, const string&, float, float, string, string, bool, string, string, Transform);
+        
 
     float getX() const;
     float getY() const;
@@ -38,8 +37,9 @@ public:
 
     void Draw(Graphics&, vector<Defs*>&) override;
 
-    void normalizeTextContent();
-    bool IsStringValidForFont() const;
 };
+
+bool IsStringValidForFont(const wchar_t*, HFONT);
+string normalizeTextContent(string);
 
 #endif
