@@ -1,4 +1,7 @@
 #include "ReadFile.h"
+#include <sstream>
+#include <map>
+#include <cmath> // Bao gồm thư viện cmath để sử dụng hàm toán học 
 
 bool checkScale = false;
 
@@ -32,44 +35,36 @@ string chuanhoa(string input)
     }
     return oss.str();
 }
-
-void getNextNumberOfValues(string& s, int& i, int num, Path& path, char curType)
-{
-    int count = 0;
-    for (int j = 0; j < num; ++j)
-    {
-        if (isdigit(s[i]) || s[i] == '-' || s[i] == '.' || s[i] == ' ')
-        {
-            size_t next_pos;
-            double num_ = stod(s.substr(i), &next_pos);
-            path.value.push_back(num_);
-            i += next_pos;
+void getNextNumberOfValues(string& s, int& i, int num, ClassPath& path, char curType) {
+    istringstream iss(s.substr(i));
+    float value;
+    int next_pos = 0;
+    while (num-- > 0 && iss >> value) {
+        path.addValue(value);
+        next_pos = iss.tellg(); // Cập nhật vị trí tiếp theo
+        if (iss.peek() == ' ' || iss.peek() == ',') {
+            iss.ignore();
         }
     }
-    path.type.push_back(curType);
+    i += next_pos; // Cập nhật vị trí i sau khi thêm các giá trị
+    path.addType(curType); // Thêm kiểu hiện tại
 }
 
-void convertPathToValue(string s, Path& path)
-{
+void convertPathToValue(string s, ClassPath& path) {
     char currentCommand = '\0';
-    path.type.clear();
-    path.value.clear();
+    path.clear(); // Xóa các giá trị trong `types` và `values` thông qua phương thức `clear`
 
     bool passM = false;
     s = chuanhoa(s);
     int i = 0;
-    while (i < s.length())
-    {
-        if (isalpha(s[i]))
-        {
-
+    while (i < s.length()) {
+        if (isalpha(s[i])) {
             currentCommand = s[i];
-            if (currentCommand == 'M' || currentCommand == 'm' && !passM)
+            if ((currentCommand == 'M' || currentCommand == 'm') && !passM)
                 passM = true;
             i++;
 
-            switch (currentCommand)
-            {
+            switch (currentCommand) {
             case 'M':
             case 'm':
                 getNextNumberOfValues(s, i, 2, path, currentCommand);
@@ -106,15 +101,13 @@ void convertPathToValue(string s, Path& path)
                 break;
             }
         }
-        else
-        {
+        else {
             if (currentCommand == 'm' && passM)
                 currentCommand = 'l';
             else if (currentCommand == 'M' && passM)
                 currentCommand = 'L';
             i++;
-            switch (currentCommand)
-            {
+            switch (currentCommand) {
             case 'M':
             case 'm':
                 getNextNumberOfValues(s, i, 2, path, currentCommand);
@@ -153,8 +146,7 @@ void convertPathToValue(string s, Path& path)
         }
         if (s[i] == ' ')
             i++;
-        if (s[i] >= '0' && s[i] <= '9' || s[i] == '-' || s[i] == '.')
-        {
+        if ((s[i] >= '0' && s[i] <= '9') || s[i] == '-' || s[i] == '.') {
             i--;
         }
     }
@@ -165,7 +157,6 @@ string toLower(string s)
     transform(s.begin(), s.end(), s.begin(), ::tolower);
     return s;
 }
-
 void convert_letters_to_RGB(RGB& rgb, string s)
 {
     map<string, RGB> colorMap =
@@ -740,80 +731,4 @@ void parseTransformChildforText(const string& transformStr, Transform& transform
         }
     }
 
-}
-
-
-void parseFillAttributes(const pugi::xml_node& node, const GroupChild& groupChild, 
-                        string& fill, float& fillOpacity, RGB& fillRGB, 
-                        const regex& rgbRegex, smatch& matches) {
-    fillOpacity = node.attribute("fill-opacity").empty()
-        ? groupChild.fillOpacity
-        : node.attribute("fill-opacity").as_float();
-    fill = node.attribute("fill").value();
-
-    if (fill == "none") {
-        fillOpacity = 0;
-        fillRGB = {255, 255, 255};
-    } else if (!fill.empty()) {
-        convert_String_to_RGB_(fillRGB, fill, matches, rgbRegex);
-    } else {
-        fillRGB = groupChild.fillRGB;
-    }
-}
-
-void parseStrokeAttributes(const pugi::xml_node& node, const GroupChild& groupChild, 
-                          string& stroke, float& strokeOpacity, float& strokeWidth, 
-                          RGB& strokeRGB, const regex& rgbRegex, smatch& matches) {
-    strokeOpacity = node.attribute("stroke-opacity").empty()
-        ? groupChild.strokeOpacity
-        : node.attribute("stroke-opacity").as_float();
-    stroke = node.attribute("stroke").value();
-
-    if (stroke == "none") {
-        strokeOpacity = 0;
-        strokeRGB = {255, 255, 255};
-    } else if (!stroke.empty()) {
-        convert_String_to_RGB_(strokeRGB, stroke, matches, rgbRegex);
-    } else {
-        strokeRGB = groupChild.strokeRGB;
-    }
-
-    strokeWidth = node.attribute("stroke-width").empty()
-        ? groupChild.strokeWidth
-        : node.attribute("stroke-width").as_float();
-}
-
-Transform parseTransformAttributes(const pugi::xml_node& node, const GroupChild& groupChild) {
-    string transformValue = node.attribute("transform").value();
-    Transform transform = {0, 0, 0, 1.0, 1.0};
-    parseTransformChild(transformValue, transform, groupChild);
-    return transform;
-}
-
-void processPathNode(const pugi::xml_node& node, const GroupChild& groupChild, 
-                     vector<Element*>& elements, const regex& rgbRegex, smatch& matches) {
-    string fill, stroke;
-    float fillOpacity, strokeOpacity, strokeWidth;
-    RGB fillRGB, strokeRGB;
-
-    // Parse attributes
-    parseFillAttributes(node, groupChild, fill, fillOpacity, fillRGB, rgbRegex, matches);
-    parseStrokeAttributes(node, groupChild, stroke, strokeOpacity, strokeWidth, strokeRGB, rgbRegex, matches);
-    Transform transform = parseTransformAttributes(node, groupChild);
-
-    // Parse path data
-    string pathData = node.attribute("d").value();
-    if (!pathData.empty()) {
-        Path_* path = new Path_(pathData, fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, fill, stroke);
-        elements.push_back(path);
-    }
-}
-
-void parseNode(const pugi::xml_node& node, GroupChild groupChild, vector<Element*>& elements, 
-               const regex& rgbRegex, smatch& matches) {
-    string nodeName = node.name();
-    if (nodeName == "path") {
-        processPathNode(node, groupChild, elements, rgbRegex, matches);
-    }
-    // Add support for other node types here if needed.
 }
