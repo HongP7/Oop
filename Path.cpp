@@ -1,610 +1,324 @@
 ﻿#include "Path.h"
+#include <sstream>
+#include <iostream>
+#include <cmath>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
-ClassPath::ClassPath(float fillOpacity, float strokeOpacity, float strokeWidth, RGB fillRGB, RGB strokeRGB, Transform transform, Path path, string fill, string stroke, float width, float height) :
-    Shape(fillRGB, strokeRGB, fillOpacity, strokeOpacity, strokeWidth, transform, fill, stroke), path(path), width_out(width), height_out(height) {}
+ClassPath::ClassPath(const std::string& pathData, const Transform& transform)
+    : Shape(), pathData(pathData), transform(transform) {
+    convertPathToValue();
+}
 
+ClassPath::ClassPath(float fillOpacity, float strokeOpacity, float strokeWidth, RGB fillRGB, RGB strokeRGB, Transform transform, Path path, const std::string& fill, const std::string& stroke, float strokeDasharray, float strokeDashoffset)
+    : Shape(), path(path), fillOpacity(fillOpacity), strokeOpacity(strokeOpacity), strokeWidth(strokeWidth), fillRGB(fillRGB), strokeRGB(strokeRGB), transform(transform), fill(fill), stroke(stroke), strokeDasharray(strokeDasharray), strokeDashoffset(strokeDashoffset) {
+    // Không cần khởi tạo lại thành viên cơ sở Shape ở đây
+}
 
+void convertPathToValue(const std::string& pathData, Path& path) {
+    std::istringstream iss(pathData);
+    char type;
+    float value;
+    while (iss >> type) {
+        path.types.push_back(type);
+        while (iss >> value) {
+            path.values.push_back(value);
+            if (iss.peek() == ' ' || iss.peek() == ',') {
+                iss.ignore();
+            }
+            else {
+                break;
+            }
+        }
+    }
+}
 
-void ClassPath::Draw(Graphics& graphics, vector<Defs*>& defs)
-{
+void ClassPath::convertPathToValue() {
+    std::istringstream iss(pathData);
+    char type;
+    float value;
+    while (iss >> type) {
+        types.push_back(type);
+        while (iss >> value) {
+            values.push_back(value);
+            if (iss.peek() == ' ' || iss.peek() == ',') {
+                iss.ignore();
+            }
+            else {
+                break;
+            }
+        }
+    }
+}
+
+void ClassPath::addValue(float value) {
+    values.push_back(value);
+}
+
+void ClassPath::addType(char type) {
+    types.push_back(type);
+}
+
+void ClassPath::clear() {
+    values.clear();
+    types.clear();
+}
+
+// Các phương thức và hàm khác...
+
+void ClassPath::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
+    GraphicsState state = TransformSVG(graphics, transform);
     GraphicsPath pathToDraw;
 
-    size_t j = 0;
-    PointF lastPoint;
-    PointF lastBezier = { 0,0 };
-
-    for (size_t i = 0; i < path.type.size(); ++i)
-    {
-        char pathType = path.type[i];
-        switch (pathType)
-        {
+    size_t valueIndex = 0;
+    PointF lastPoint(0, 0), controlPoint(0, 0);
+    for (char type : path.types) {
+        switch (type) {
         case 'M':
-        {
-            if (j + 1 < path.value.size())
-            {
-                pathToDraw.StartFigure();
-                pathToDraw.AddLine(path.value[j], path.value[j + 1], path.value[j], path.value[j + 1]);
-
-
-
-                j += 2;
-            }
-            break;
-        }
         case 'm':
-        {
-            if (j + 1 < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-                pathToDraw.AddLine(lastPoint.X + path.value[j], lastPoint.Y + path.value[j + 1], lastPoint.X + path.value[j], lastPoint.Y + path.value[j + 1]);
-                j += 2;
-            }
+            pathToDraw.StartFigure();
+            lastPoint = PointF(path.values[valueIndex], path.values[valueIndex + 1]);
+            valueIndex += 2;
             break;
-        }
-
         case 'L':
-        {
-            if (j + 1 < path.value.size())
-            {
-                pathToDraw.AddLine(path.value[j], path.value[j + 1], path.value[j], path.value[j + 1]);
-
-                j += 2;
-            }
-            break;
-        }
         case 'l':
-        {
-            if (j + 1 < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-                pathToDraw.AddLine(lastPoint.X + path.value[j], lastPoint.Y + path.value[j + 1], lastPoint.X + path.value[j], lastPoint.Y + path.value[j + 1]);
-                j += 2;
-            }
+            pathToDraw.AddLine(lastPoint, PointF(path.values[valueIndex], path.values[valueIndex + 1]));
+            lastPoint = PointF(path.values[valueIndex], path.values[valueIndex + 1]);
+            valueIndex += 2;
             break;
-        }
-
         case 'H':
-        {
-            if (j < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-                pathToDraw.AddLine(path.value[j], lastPoint.Y, path.value[j], lastPoint.Y);
-                j += 1;
-            }
-            break;
-        }
         case 'h':
-        {
-            if (j < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-                pathToDraw.AddLine(lastPoint.X, lastPoint.Y, lastPoint.X + path.value[j], lastPoint.Y);
-                j += 1;
-            }
+            if (type == 'H')
+                pathToDraw.AddLine(lastPoint, PointF(path.values[valueIndex], lastPoint.Y));
+            else
+                pathToDraw.AddLine(lastPoint, PointF(lastPoint.X + path.values[valueIndex], lastPoint.Y));
+            lastPoint = PointF(path.values[valueIndex], lastPoint.Y);
+            valueIndex += 1;
             break;
-        }
-
         case 'V':
-        {
-            if (j < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-                pathToDraw.AddLine(lastPoint.X, path.value[j], lastPoint.X, path.value[j]);
-                j += 1;
-            }
-            break;
-        }
         case 'v':
-        {
-            if (j < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-                pathToDraw.AddLine(lastPoint.X, lastPoint.Y, lastPoint.X, lastPoint.Y + path.value[j]);
-                j += 1;
-            }
+            if (type == 'V')
+                pathToDraw.AddLine(lastPoint, PointF(lastPoint.X, path.values[valueIndex]));
+            else
+                pathToDraw.AddLine(lastPoint, PointF(lastPoint.X, lastPoint.Y + path.values[valueIndex]));
+            lastPoint = PointF(lastPoint.X, path.values[valueIndex]);
+            valueIndex += 1;
             break;
-        }
-
         case 'C':
-        {
-            if (j + 5 < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-
-                pathToDraw.AddBezier(lastPoint.X, lastPoint.Y, path.value[j], path.value[j + 1],
-                    path.value[j + 2], path.value[j + 3], path.value[j + 4], path.value[j + 5]);
-
-                lastBezier.X = path.value[j + 2];
-                lastBezier.Y = path.value[j + 3];
-                j += 6;
-            }
-            break;
-        }
         case 'c':
-        {
-            if (j + 5 < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-
-                pathToDraw.AddBezier(lastPoint.X, lastPoint.Y,
-                    lastPoint.X + path.value[j], lastPoint.Y + path.value[j + 1],
-                    lastPoint.X + path.value[j + 2], lastPoint.Y + path.value[j + 3],
-                    lastPoint.X + path.value[j + 4], lastPoint.Y + path.value[j + 5]);
-
-                lastBezier.X = lastPoint.X + path.value[j + 2];
-                lastBezier.Y = lastPoint.Y + path.value[j + 3];
-
-                j += 6;
-            }
+            pathToDraw.AddBezier(
+                static_cast<REAL>(lastPoint.X), static_cast<REAL>(lastPoint.Y),
+                static_cast<REAL>(path.values[valueIndex]), static_cast<REAL>(path.values[valueIndex + 1]),
+                static_cast<REAL>(path.values[valueIndex + 2]), static_cast<REAL>(path.values[valueIndex + 3]),
+                static_cast<REAL>(path.values[valueIndex + 4]), static_cast<REAL>(path.values[valueIndex + 5])
+            );
+            lastPoint = PointF(path.values[valueIndex + 4], path.values[valueIndex + 5]);
+            controlPoint = PointF(path.values[valueIndex + 2], path.values[valueIndex + 3]);
+            valueIndex += 6;
             break;
-        }
-        case 's':
         case 'S':
-        {
-            if (j + 3 < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-
-                float control1X, control1Y;
-                if (lastBezier.X == 0 && lastBezier.Y == 0)
-                {
-                    control1X = lastPoint.X;
-                    control1Y = lastPoint.Y;
-                }
-                else
-                {
-                    control1X = 2.0f * lastPoint.X - lastBezier.X;
-                    control1Y = 2.0f * lastPoint.Y - lastBezier.Y;
-                }
-
-                if (pathType == 's')
-                {
-                    pathToDraw.AddBezier(lastPoint.X, lastPoint.Y,
-                        control1X, control1Y,
-                        lastPoint.X + path.value[j], lastPoint.Y + path.value[j + 1],
-                        lastPoint.X + path.value[j + 2], lastPoint.Y + path.value[j + 3]);
-
-                    lastBezier.X = lastPoint.X + path.value[j];
-                    lastBezier.Y = lastPoint.Y + path.value[j + 1];
-                }
-                else
-                {
-                    pathToDraw.AddBezier(lastPoint.X, lastPoint.Y, control1X, control1Y,
-                        path.value[j], path.value[j + 1],
-                        path.value[j + 2], path.value[j + 3]);
-
-                    lastBezier.X = path.value[j];
-                    lastBezier.Y = path.value[j + 1];
-                }
-                j += 4;
-            }
+        case 's':
+            pathToDraw.AddBezier(
+                static_cast<REAL>(lastPoint.X), static_cast<REAL>(lastPoint.Y),
+                static_cast<REAL>(2 * lastPoint.X - controlPoint.X), static_cast<REAL>(2 * lastPoint.Y - controlPoint.Y),
+                static_cast<REAL>(path.values[valueIndex]), static_cast<REAL>(path.values[valueIndex + 1]),
+                static_cast<REAL>(path.values[valueIndex + 2]), static_cast<REAL>(path.values[valueIndex + 3])
+            );
+            lastPoint = PointF(path.values[valueIndex + 2], path.values[valueIndex + 3]);
+            controlPoint = PointF(path.values[valueIndex], path.values[valueIndex + 1]);
+            valueIndex += 4;
             break;
-        }
-
         case 'Q':
-        {
-            if (j + 3 < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-
-                pathToDraw.AddBezier(lastPoint.X, lastPoint.Y,
-                    path.value[j], path.value[j + 1],
-                    path.value[j + 2], path.value[j + 3],
-                    path.value[j + 2], path.value[j + 3]);
-
-                lastBezier.X = path.value[j];
-                lastBezier.Y = path.value[j + 1];
-                j += 4;
-            }
-            break;
-        }
         case 'q':
         {
-            if (j + 3 < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
+            float x1 = lastPoint.X;
+            float y1 = lastPoint.Y;
+            float x2 = path.values[valueIndex];
+            float y2 = path.values[valueIndex + 1];
+            float x3 = path.values[valueIndex + 2];
+            float y3 = path.values[valueIndex + 3];
 
-                float point1 = lastPoint.X + 2.0f / 3.0f * (path.value[j]);
-                float point2 = lastPoint.Y + 2.0f / 3.0f * (path.value[j + 1]);
-                float point3 = (lastPoint.X + path.value[j + 2]) + 2.0f / 3.0f * (path.value[j] - path.value[j + 2]);
-                float point4 = (lastPoint.Y + path.value[j + 3]) + 2.0f / 3.0f * (path.value[j + 1] - path.value[j + 3]);
+            float c1x = x1 + 2.0f / 3.0f * (x2 - x1);
+            float c1y = y1 + 2.0f / 3.0f * (y2 - y1);
+            float c2x = x3 + 2.0f / 3.0f * (x2 - x3);
+            float c2y = y3 + 2.0f / 3.0f * (y2 - y3);
 
-                pathToDraw.AddBezier(lastPoint.X, lastPoint.Y,
-                    point1, point2, point3, point4,
-                    lastPoint.X + path.value[j + 2], lastPoint.Y + path.value[j + 3]);
+            pathToDraw.AddBezier(
+                static_cast<REAL>(x1), static_cast<REAL>(y1),
+                static_cast<REAL>(c1x), static_cast<REAL>(c1y),
+                static_cast<REAL>(c2x), static_cast<REAL>(c2y),
+                static_cast<REAL>(x3), static_cast<REAL>(y3)
+            );
 
-                lastBezier.X = lastPoint.X + path.value[j + 2];
-                lastBezier.Y = lastPoint.Y + path.value[j + 3];
-                j += 4;
-            }
+            lastPoint = PointF(x3, y3);
+            controlPoint = PointF(x2, y2);
+            valueIndex += 4;
             break;
         }
-
-        case 't':
         case 'T':
-        {
-            if (j + 1 < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-                float control1X, control1Y;
-                if (lastBezier.X == 0 && lastBezier.Y == 0)
-                {
-                    control1X = lastPoint.X;
-                    control1Y = lastPoint.Y;
-                }
-                else
-                {
-                    control1X = 2 * lastPoint.X - lastBezier.X;
-                    control1Y = 2 * lastPoint.Y - lastBezier.Y;
-                }
-
-                if (pathType == 't')
-                {
-                    float point1 = lastPoint.X + 2.0f / 3.0f * (control1X - lastPoint.X);
-                    float point2 = lastPoint.Y + 2.0f / 3.0f * (control1Y - lastPoint.Y);
-
-                    float point3 = (lastPoint.X + path.value[j]) + (2.0f / 3.0f * (control1X - lastPoint.X - path.value[j]));
-                    float point4 = (lastPoint.Y + path.value[j + 1]) + (2.0f / 3.0f * (control1Y - lastPoint.Y - path.value[j + 1]));
-
-                    pathToDraw.AddBezier(lastPoint.X, lastPoint.Y,
-                        point1, point2,
-                        point3, point4,
-                        lastPoint.X + path.value[j], lastPoint.Y + path.value[j + 1]);
-
-                    lastBezier.X = (3.0f / 4.0f * point1 + 1.0f / 4.0f * point3);
-                    lastBezier.Y = (3.0f / 4.0f * point2 + 1.0f / 4.0f * point4);
-                }
-                else
-                {
-                    pathToDraw.AddBezier(lastPoint.X, lastPoint.Y,
-                        control1X, control1Y,
-                        path.value[j], path.value[j + 1],
-                        path.value[j], path.value[j + 1]);
-
-                    lastBezier.X = control1X;
-                    lastBezier.Y = control1Y;
-
-                }
-
-                j += 2;
-            }
+        case 't':
+            pathToDraw.AddLine(lastPoint, PointF(path.values[valueIndex], path.values[valueIndex + 1]));
+            lastPoint = PointF(path.values[valueIndex], path.values[valueIndex + 1]);
+            valueIndex += 2;
             break;
-        }
-
         case 'A':
-        {
-            if (j + 6 < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
-
-                float rx = path.value[j];
-                float ry = path.value[j + 1];
-                float rotation = path.value[j + 2];
-                bool largeArcFlag = path.value[j + 3] != 0;
-                bool sweepFlag = path.value[j + 4] != 0;
-                float x = path.value[j + 5];
-                float y = path.value[j + 6];
-
-                float Angle = rotation * static_cast<float>(M_PI) / 180.0f;
-                float cosAngle = cos(Angle);
-                float sinAngle = sin(Angle);
-
-                float cons = cosAngle * cosAngle - (sinAngle * -sinAngle);
-                PointF point1;
-                point1.X = cons * (lastPoint.X - x) / 2.0f;
-                point1.Y = cons * (lastPoint.Y - y) / 2.0f;
-
-                float check_r = (point1.X * point1.X) / (rx * rx) + (point1.Y * point1.Y) / (ry * ry);
-                if (check_r > 1.0f)
-                {
-                    rx = sqrt(check_r) * rx;
-                    ry = sqrt(check_r) * ry;
-                }
-
-                int sign;
-                if (largeArcFlag == sweepFlag)
-                    sign = -1;
-                else
-                    sign = 1;
-
-                float num = abs(pow(rx, 2) * pow(ry, 2) - pow(rx, 2) * pow(point1.Y, 2) - pow(ry, 2) * pow(point1.X, 2));
-
-                float den = pow(rx, 2) * pow(point1.Y, 2) + pow(ry, 2) * pow(point1.X, 2);
-                PointF point2;
-                point2.X = sign * sqrt(num / den) * (rx * point1.Y / ry);
-                point2.Y = sign * sqrt(num / den) * (-ry * point1.X / rx);
-
-                cons = pow(cosAngle, 2) - (sinAngle * -sinAngle);
-                PointF center;
-                center.X = cons * point2.X + (lastPoint.X + x) / 2.0f;
-                center.Y = cons * point2.Y + (lastPoint.Y + y) / 2.0f;
-
-                float startAngle = atan2((point1.Y - point2.Y) / ry, (point1.X - point2.X) / rx);
-                float endAngle = atan2((-point1.Y - point2.Y) / ry, (-point1.X - point2.X) / rx);
-
-                float deltAngle = endAngle - startAngle;
-
-                if (sweepFlag && deltAngle < 0)
-                {
-                    deltAngle += (2.0f * M_PI);
-                }
-                else if (!sweepFlag && deltAngle > 0)
-                {
-                    deltAngle -= (2.0f * M_PI);
-                }
-
-                float startAngleDegrees = fmod((startAngle * 180.0f) / M_PI, 360.0f);
-                float deltAngleDegrees = fmod((deltAngle * 180.0f) / M_PI, 360.0f);
-
-                pathToDraw.AddArc(center.X - rx, center.Y - ry, 2.0f * rx, 2.0f * ry,
-                    startAngleDegrees, deltAngleDegrees);
-
-
-                j += 7;
-            }
-            break;
-        }
         case 'a':
         {
-            if (j + 6 < path.value.size())
-            {
-                pathToDraw.GetLastPoint(&lastPoint);
+            float rx = path.values[valueIndex];
+            float ry = path.values[valueIndex + 1];
+            float xAxisRotation = path.values[valueIndex + 2];
+            bool largeArcFlag = path.values[valueIndex + 3] != 0;
+            bool sweepFlag = path.values[valueIndex + 4] != 0;
+            PointF endPoint(path.values[valueIndex + 5], path.values[valueIndex + 6]);
 
-                float rx = path.value[j];
-                float ry = path.value[j + 1];
-                float rotation = path.value[j + 2];
-                bool largeArcFlag = path.value[j + 3];
-                bool sweepFlag = path.value[j + 4];
-                float x = lastPoint.X + path.value[j + 5];
-                float y = lastPoint.Y + path.value[j + 6];
-
-                float Angle = rotation * static_cast<float>(M_PI) / 180.0f;
-                float cosAngle = cos(Angle);
-                float sinAngle = sin(Angle);
-
-                float cons = cosAngle * cosAngle - (sinAngle * -sinAngle);
-                PointF point1;
-                point1.X = cons * (lastPoint.X - x) / 2.0f;
-                point1.Y = cons * (lastPoint.Y - y) / 2.0f;
-
-                float check_r = (point1.X * point1.X) / (rx * rx) + (point1.Y * point1.Y) / (ry * ry);
-                if (check_r > 1.0f)
-                {
-                    rx = sqrt(check_r) * rx;
-                    ry = sqrt(check_r) * ry;
-                }
-
-                int sign = (largeArcFlag == sweepFlag ? -1 : 1);
-
-                float num = abs(pow(rx, 2) * pow(ry, 2) - pow(rx, 2) * pow(point1.Y, 2) - pow(ry, 2) * pow(point1.X, 2));
-
-                float den = pow(rx, 2) * pow(point1.Y, 2) + pow(ry, 2) * pow(point1.X, 2);
-                PointF point2;
-                point2.X = sign * sqrt(num / den) * (rx * point1.Y / ry);
-                point2.Y = sign * sqrt(num / den) * (-ry * point1.X / rx);
-
-                cons = pow(cosAngle, 2) - (sinAngle * -sinAngle);
-                PointF center;
-                center.X = cons * point2.X + (lastPoint.X + x) / 2.0f;
-                center.Y = cons * point2.Y + (lastPoint.Y + y) / 2.0f;
-
-                float startAngle = atan2((point1.Y - point2.Y) / ry, (point1.X - point2.X) / rx);
-                float endAngle = atan2((-point1.Y - point2.Y) / ry, (-point1.X - point2.X) / rx);
-
-                float deltAngle = endAngle - startAngle;
-
-                if (sweepFlag && deltAngle < 0)
-                {
-                    deltAngle += 2.0f * M_PI;
-                }
-                else if (!sweepFlag && deltAngle > 0)
-                {
-                    deltAngle -= 2.0f * M_PI;
-                }
-
-                float startAngleDegrees = fmod((long double)(startAngle * 180.0f) / M_PI, 360.0f);
-                float deltAngleDegrees = fmod((long double)(deltAngle * 180.0f) / M_PI, 360.0f);
-
-                pathToDraw.AddArc(center.X - rx, center.Y - ry, 2.0f * rx, 2.0f * ry,
-                    startAngleDegrees, deltAngleDegrees);
-
-                j += 7;
-
+            if (type == 'a') {
+                endPoint.X += lastPoint.X;
+                endPoint.Y += lastPoint.Y;
             }
+
+            AddArc(pathToDraw, lastPoint, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, endPoint);
+            lastPoint = endPoint;
+            valueIndex += 7;
             break;
         }
-
         case 'Z':
         case 'z':
-        {
             pathToDraw.CloseFigure();
-
             break;
         }
+    }
+
+    // Tạo brush và pen cho fill và stroke
+    SolidBrush fillBrush(Color(255 * static_cast<int>(fillOpacity), fillRGB.r, fillRGB.g, fillRGB.b));
+    Pen strokePen(Color(255 * static_cast<int>(strokeOpacity), strokeRGB.r, strokeRGB.g, strokeRGB.b), strokeWidth);
+
+    if (!fill.empty()) {
+        // Tìm kiếm gradient tương ứng trong defs
+        for (Defs* def : defs) {
+            for (auto& gradient : def->getlinear()) {
+                if (gradient->getID() == fill) {
+                    LinearGradientBrush gradientBrush(PointF(gradient->getPoint().x1, gradient->getPoint().y1),
+                        PointF(gradient->getPoint().x2, gradient->getPoint().y2),
+                        Color(255, gradient->getStopList()[0]->getstopColor_red(), gradient->getStopList()[0]->getstopColor_green(), gradient->getStopList()[0]->getstopColor_blue()),
+                        Color(255, gradient->getStopList()[1]->getstopColor_red(), gradient->getStopList()[1]->getstopColor_green(), gradient->getStopList()[1]->getstopColor_blue()));
+                    graphics.FillPath(&gradientBrush, &pathToDraw);
+                }
+            }
+            for (auto& gradient : def->getradial()) {
+                if (gradient->getID() == fill) {
+                    PointF center = PointF(gradient->getcx(), gradient->getcy());
+                    float radius = gradient->getr();
+                    PathGradientBrush gradientBrush(&pathToDraw);
+                    gradientBrush.SetCenterColor(Color(255, gradient->getStopList()[0]->getstopColor_red(), gradient->getStopList()[0]->getstopColor_green(), gradient->getStopList()[0]->getstopColor_blue()));
+                    int colorCount = gradient->getStopList().size();
+                    Color* surroundColors = new Color[colorCount];
+                    for (int i = 0; i < colorCount; ++i) {
+                        surroundColors[i] = Color(255, gradient->getStopList()[i]->getstopColor_red(), gradient->getStopList()[i]->getstopColor_green(), gradient->getStopList()[i]->getstopColor_blue());
+                    }
+                    gradientBrush.SetSurroundColors(surroundColors, &colorCount);
+                    graphics.FillPath(&gradientBrush, &pathToDraw);
+                    delete[] surroundColors;
+                }
+            }
         }
     }
-    SolidBrush pathBrush(Color(255 * fillOpacity, fillRGB.r, fillRGB.g, fillRGB.b));
-    Pen pathPen(Color(255 * strokeOpacity, strokeRGB.r, strokeRGB.g, strokeRGB.b), strokeWidth);
-
-    pathToDraw.SetFillMode(FillModeWinding);
-    GraphicsState state = TransformSVG(graphics, transform);
-    graphics.DrawPath(&pathPen, &pathToDraw);
-    if (fill != "")
-    {
-        vector<RadialGradient*> vectorradial = defs[0]->getradial();
-        RadialGradient* radialGradient = nullptr;
-
-        for (RadialGradient* rad : vectorradial)
-        {
-            if (rad->getID() == fill)
-            {
-                radialGradient = rad;
-                break;
-            }
-        }
-        if (radialGradient != nullptr)
-        {
-            string xlink = radialGradient->getxlink();
-            if (xlink != "")
-            {
-                //fill = xlink;
-
-                vector<LinearGradient*> vectorlinear = defs[0]->getlinear();
-                LinearGradient* linearGradient = nullptr;
-
-
-                for (LinearGradient* lin : vectorlinear)
-                {
-                    if (lin->getID() == xlink)
-                    {
-                        linearGradient = lin;
-                        break;
-                    }
-                }
-                if (linearGradient != nullptr)
-                {
-                    vector<Stop*> StopList = linearGradient->getStopList();
-                    Color* colors = new Color[StopList.size()];
-
-                    for (int i = 0; i < StopList.size(); ++i)
-                    {
-                        colors[i] = Color(255 * StopList[i]->getstopOpacity(), StopList[i]->getstopColor_red(), StopList[i]->getstopColor_green(), StopList[i]->getstopColor_blue());
-                    }
-                    float* positions = new float[StopList.size()];
-
-                    for (size_t i = 0; i < StopList.size(); ++i)
-                    {
-                        positions[i] = 1 - StopList[i]->getoffset();
-                    }
-
-                    float cx = radialGradient->getcx();
-                    float cy = radialGradient->getcy();
-                    float r = radialGradient->getr();
-                  
-                    Transform trans = radialGradient->gettransform();
-
-
-                    GraphicsPath pathh;
-                    pathh.AddEllipse(RectF(cx - r, cy - r, 2 * r, 2* r));
-                    PathGradientBrush radiall(&pathh);
-                    radiall.SetInterpolationColors(colors, positions, StopList.size());
-                    Matrix matrix_(trans.scaleX, trans.skewX, trans.skewY, trans.scaleY, trans.translateX, trans.translateY);
-                    radiall.GetTransform(&matrix_);
-                    radiall.SetWrapMode(WrapModeTileFlipXY);
-
-
-
-                    LinearGradientBrush linGrBrush(PointF(cx - r, cy - r), PointF(cx + r, cy + r), colors[0], colors[StopList.size() - 1]);
-                    Matrix matrix(trans.scaleX, trans.skewX, trans.skewY, trans.scaleY, trans.translateX, trans.translateY);
-                    linGrBrush.GetTransform(&matrix);
-                    linGrBrush.SetInterpolationColors(colors, positions, StopList.size());
-
-                    linGrBrush.SetWrapMode(WrapModeTileFlipXY);
-                    graphics.FillPath(&linGrBrush, &pathToDraw);
-                    delete[] positions;
-                    delete[] colors;
-
-                }
-
-            }
-            else
-            {
-                vector<Stop*> StopList = radialGradient->getStopList();
-                Color* colors = new Color[StopList.size()];
-
-                for (int i = 0; i < StopList.size(); ++i)
-                {
-                    colors[i] = Color(255 * StopList[i]->getstopOpacity(), StopList[i]->getstopColor_red(), StopList[i]->getstopColor_green(), StopList[i]->getstopColor_blue());
-                }
-                float* positions = new float[StopList.size()];
-
-                for (size_t i = 0; i < StopList.size(); ++i)
-                {
-                    positions[i] = StopList[i]->getoffset();
-                }
-
-                float cx = radialGradient->getcx();
-                float cy = radialGradient->getcy();
-                float r = radialGradient->getr();
-                float fx = radialGradient->getfx();
-                float fy = radialGradient->getfy();
-                Transform trans = radialGradient->gettransform();
-
-
-                LinearGradientBrush linGrBrush(PointF(cx - r, cy - r), PointF(cx + r, cy + r), colors[0], colors[StopList.size() - 1]);
-                linGrBrush.SetInterpolationColors(colors, positions, StopList.size());
-                Matrix matrix(trans.scaleX, trans.skewX, trans.skewY, trans.scaleY, trans.translateX, trans.translateY);
-                linGrBrush.GetTransform(&matrix);
-                linGrBrush.SetWrapMode(WrapModeTileFlipXY);
-                graphics.FillPath(&linGrBrush, &pathToDraw);
-                delete[] positions;
-                delete[] colors;
-            }
-        }
-
-        vector<LinearGradient*> vectorlinear = defs[0]->getlinear();
-        LinearGradient* linearGradient = nullptr;
-
-
-        for (LinearGradient* lin : vectorlinear)
-        {
-            if (lin->getID() == fill)
-            {
-                linearGradient = lin;
-                break;
-            }
-        }
-
-        if (linearGradient != nullptr)
-        {
-            vector<Stop*> StopList = linearGradient->getStopList();
-            Color* colors = new Color[StopList.size()];
-
-            for (int i = 0; i < StopList.size(); ++i)
-            {
-                colors[i] = Color(255 * StopList[i]->getstopOpacity(), StopList[i]->getstopColor_red(), StopList[i]->getstopColor_green(), StopList[i]->getstopColor_blue());
-            }
-            float* positions = new float[StopList.size()];
-
-            for (size_t i = 0; i < StopList.size(); ++i)
-            {
-                positions[i] = StopList[i]->getoffset();
-            }
-
-            pointLinearGradient pointlineargradient = linearGradient->getPoint();
-
-            if (pointlineargradient.x2 == 0 && pointlineargradient.y2 == 0)
-            {
-                LinearGradientBrush gradientBrush(PointF(pointlineargradient.x1, pointlineargradient.y1),
-                    PointF(width_out, height_out),
-                    colors[0], colors[StopList.size() - 1]);
-                gradientBrush.SetInterpolationColors(colors, positions, StopList.size());
-                gradientBrush.SetWrapMode(WrapModeTileFlipXY);
-                gradientBrush.SetLinearColors(colors[0], colors[StopList.size() - 1]); //  default gradientUnits = userSpaceOnUse
-                gradientBrush.SetGammaCorrection(TRUE);
-                graphics.FillPath(&gradientBrush, &pathToDraw);
-            }
-            else
-            {
-                LinearGradientBrush gradientBrush(PointF(pointlineargradient.x1, pointlineargradient.y1),
-                    PointF(pointlineargradient.x2, pointlineargradient.y2),
-                    colors[0], colors[StopList.size() - 1]);
-                Transform trans = linearGradient->gettransform();
-                Matrix matrix(trans.scaleX, trans.skewX, trans.skewY, trans.scaleY, trans.translateX, trans.translateY);
-                gradientBrush.GetTransform(&matrix);
-                gradientBrush.SetInterpolationColors(colors, positions, StopList.size());
-                gradientBrush.SetLinearColors(colors[0], colors[StopList.size() - 1]); //  default gradientUnits = userSpaceOnUse
-                gradientBrush.SetGammaCorrection(TRUE);
-                graphics.FillPath(&gradientBrush, &pathToDraw);
-
-            }
-            delete[] colors;
-            delete[] positions;
-        }
+    else {
+        graphics.FillPath(&fillBrush, &pathToDraw);
     }
-    else
-        graphics.FillPath(&pathBrush, &pathToDraw);
+    graphics.DrawPath(&strokePen, &pathToDraw);
 
     graphics.Restore(state);
+}
+
+void ClassPath::AddArc(GraphicsPath& pathToDraw, PointF& lastPoint, float rx, float ry, float xAxisRotation, bool largeArcFlag, bool sweepFlag, PointF endPoint) {
+    // Chuyển đổi các góc từ độ sang radian
+    float phi = xAxisRotation * (M_PI / 180.0);
+
+    // Tính tọa độ điểm giữa giữa
+    float x1prime = cos(phi) * (lastPoint.X - endPoint.X) / 2.0 + sin(phi) * (lastPoint.Y - endPoint.Y) / 2.0;
+    float y1prime = -sin(phi) * (lastPoint.X - endPoint.X) / 2.0 + cos(phi) * (lastPoint.Y - endPoint.Y) / 2.0;
+
+    // Tính bán kính điều chỉnh
+    float rx_sq = rx * rx;
+    float ry_sq = ry * ry;
+    float x1prime_sq = x1prime * x1prime;
+    float y1prime_sq = y1prime * y1prime;
+
+    // Kiểm tra và điều chỉnh bán kính
+    float radicant = (rx_sq * ry_sq - rx_sq * y1prime_sq - ry_sq * x1prime_sq) / (rx_sq * y1prime_sq + ry_sq * x1prime_sq);
+    radicant = (radicant < 0) ? 0 : radicant;
+    float c_prime = sqrt(radicant);
+    if (largeArcFlag == sweepFlag) {
+        c_prime = -c_prime;
+    }
+
+    float cx_prime = c_prime * rx * y1prime / ry;
+    float cy_prime = -c_prime * ry * x1prime / rx;
+
+    float cx = cos(phi) * cx_prime - sin(phi) * cy_prime + (lastPoint.X + endPoint.X) / 2.0;
+    float cy = sin(phi) * cx_prime + cos(phi) * cy_prime + (lastPoint.Y + endPoint.Y) / 2.0;
+
+    // Tính các góc bắt đầu và độ dài
+    float ux = (x1prime - cx_prime) / rx;
+    float uy = (y1prime - cy_prime) / ry;
+    float vx = (-x1prime - cx_prime) / rx;
+    float vy = (-y1prime - cy_prime) / ry;
+
+    float n = sqrt(ux * ux + uy * uy);
+    float p = ux; // dot product of (ux, uy) and (1, 0)
+    float theta = acos(p / n);
+
+    if (uy < 0) {
+        theta = -theta;
+    }
+
+    // Distance between (ux, uy) and (vx, vy)
+    n = sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy));
+    p = ux * vx + uy * vy;
+    float d = p / n;
+    if (d > 1.0) d = 1.0;
+    if (d < -1.0) d = -1.0;
+    float deltaTheta = acos(d);
+
+    // Ensure correct direction
+    if (ux * vy - uy * vx < 0) {
+        deltaTheta = -deltaTheta;
+    }
+
+    if (!sweepFlag && deltaTheta > 0) {
+        deltaTheta -= 2 * M_PI;
+    }
+    else if (sweepFlag && deltaTheta < 0) {
+        deltaTheta += 2 * M_PI;
+    }
+
+    pathToDraw.AddArc(cx - rx, cy - ry, 2 * rx, 2 * ry, theta * (180.0 / M_PI), deltaTheta * (180.0 / M_PI));
+}
+
+void ClassPath::AddArc(GraphicsPath& pathToDraw, float cx, float cy, float rx, float ry, float startAngle, float deltaAngle, bool sweepFlag) {
+    // Ensure angles are in radians
+    if (!sweepFlag) {
+        deltaAngle = -deltaAngle;
+    }
+
+    pathToDraw.AddArc(cx - rx, cy - ry, 2 * rx, 2 * ry, startAngle * (180.0 / M_PI), deltaAngle * (180.0 / M_PI));
+}
+void convertPathToValue(const std::string& pathData, Path& path) {
+    std::istringstream iss(pathData);
+    char type;
+    float value;
+    while (iss >> type) {
+        path.types.push_back(type);
+        while (iss >> value) {
+            path.values.push_back(value);
+            if (iss.peek() == ' ' || iss.peek() == ',') {
+                iss.ignore();
+            }
+            else {
+                break;
+            }
+        }
+    }
 }
