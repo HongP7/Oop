@@ -1,4 +1,4 @@
-#include "Readfile.h"
+#include "ReadFile.h"
 string filename = "sample.svg";
 
 
@@ -7,25 +7,32 @@ float offsetX = 0.0f;
 float offsetY = 0.0f;
 
 
-void ViewBox::DrawViewBox() {
-    if (width_out == 0 || height_out == 0) {
-        if (width_in < 800 || height_in < 600) {
+void ViewBox::DrawViewBox()
+{
+    if (width_out == 0 || height_out == 0)
+    {
+        if (width_in < 800 || height_in < 600)
+        {
             width_out = 800;
             height_out = 600;
         }
-        else {
+        else
+        {
             width_out = width_in;
             height_out = height_in;
         }
     }
     float scaleX_ = 1, scaleY_ = 1;
-    if (width_out != 0 && height_out != 0 && width_in != 0 && height_in != 0) {
+
+    if (width_out != 0 && height_out != 0 && width_in != 0 && height_in != 0)
+    {
         scaleX_ = width_out / width_in;
         scaleY_ = height_out / height_in;
         scale = ((scaleX_ < scaleY_) ? scaleX_ : scaleY_);
     }
     static bool loop = true;
-    if (loop && width_in != 0 && height_in != 0) {
+    if (loop && width_in != 0 && height_in != 0)
+    {
         offsetX += abs(width_out - width_in * scale) / 2;
         offsetY += abs(height_out - height_in * scale) / 2;
         loop = false;
@@ -49,37 +56,47 @@ void ZoomGraphics(Graphics& graphics, float scale_, float scale_viewbox, float w
 
 string GetClassName(Shape* element)
 {
-    if (dynamic_cast<Circle*>(element) != NULL) {
+    if (dynamic_cast<Circle*>(element) != NULL)
+    {
         return "Circle";
     }
-    else if (dynamic_cast<Rectangle_*>(element) != NULL) {
+    else if (dynamic_cast<Rect_*>(element) != NULL)
+    {
         return "Rect";
     }
-    else if (dynamic_cast<Line*>(element) != NULL) {
+    else if (dynamic_cast<Line*>(element) != NULL)
+    {
         return "Line";
     }
-    else if (dynamic_cast<Text_*>(element) != NULL) {
+    else if (dynamic_cast<Text*>(element) != NULL)
+    {
         return "Text";
     }
-    else if (dynamic_cast<Polyline_*>(element) != NULL) {
+    else if (dynamic_cast<Polyline_*>(element) != NULL)
+    {
         return "Polyline";
     }
-    else if (dynamic_cast<Polygon_*>(element) != NULL) {
+    else if (dynamic_cast<Polygon_*>(element) != NULL)
+    {
         return "Polygon";
     }
-    else if (dynamic_cast<Ellipse_*>(element) != NULL) {
+    else if (dynamic_cast<Ellipse_*>(element) != NULL)
+    {
         return "Ellipse";
     }
-    else if (dynamic_cast<ClassPath*>(element) != NULL) {
+    else if (dynamic_cast<ClassPath*>(element) != NULL)
+    {
         return "Path";
     }
-    if (dynamic_cast<Group_*>(element) != NULL) {
+    if (dynamic_cast<Group*>(element) != NULL)
+    {
         return "Group";
     }
     return "Shape";
 }
 
-VOID OnPaint(HDC hdc) {
+VOID OnPaint(HDC hdc)
+{
     Graphics graphics(hdc);
     graphics.SetSmoothingMode(SmoothingModeAntiAlias);
     vector<Shape*> elements;
@@ -112,7 +129,7 @@ VOID OnPaint(HDC hdc) {
         }
         else if (className == "Rect")
         {
-            Rectangle_* rect = dynamic_cast<Rectangle_*>(element);
+            Rect_* rect = dynamic_cast<Rect_*>(element);
             rect->Draw(graphics, elements_defs);
         }
         else if (className == "Line")
@@ -122,7 +139,7 @@ VOID OnPaint(HDC hdc) {
         }
         else if (className == "Text")
         {
-            Text_* text = dynamic_cast<Text_*>(element);
+            Text* text = dynamic_cast<Text*>(element);
             text->Draw(graphics, elements_defs);
         }
         else if (className == "Polyline")
@@ -147,7 +164,7 @@ VOID OnPaint(HDC hdc) {
         }
         else if (className == "Group")
         {
-            Group_* group = dynamic_cast<Group_*>(element);
+            Group* group = dynamic_cast<Group*>(element);
             group->Draw(graphics, elements_defs);
         }
     }
@@ -243,7 +260,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, INT iCmdShow
     RegisterClass(&wndClass);
     hWnd = CreateWindow(
         TEXT("GettingStarted"), // window class name
-        TEXT("OOP SVG"),       // window caption
+        TEXT("SVGGGGGGGGGGGGGGGGGGGGGG"),       // window caption
         WS_OVERLAPPEDWINDOW,    // window style
         CW_USEDEFAULT,          // initial x position
         CW_USEDEFAULT,          // initial y position
