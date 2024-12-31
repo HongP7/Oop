@@ -4,14 +4,18 @@
 #include "Shapes.h"
 #include <vector>
 
-class Group : public Shape {
+class Group_ : public Shape
+{
+private:
+    vector<Shape*> shapes;
+    int fontSize;
+
 public:
-    Group(const Transform& transform);
-    void Draw(Graphics& graphics, std::vector<Defs*>& defs) override;
+    Group_(vector<Shape*>&, float, float, RGB, RGB, float, Transform, int, string, string);
+    void Draw(Graphics&, vector<Defs*>&) override;
     void AddShape(Shape* shape);
 
-private:
-    std::vector<Shape*> shapes;
 };
+
 
 #endif // GROUP_H

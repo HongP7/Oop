@@ -3,22 +3,22 @@
 #include <algorithm>
 #include<string>
 
-Text::Text(float x, float y, std::string content, float fontSize, float fillOpacity, float strokeOpacity, float strokeWidth, 
+Text_::Text_(float x, float y, std::string content, float fontSize, float fillOpacity, float strokeOpacity, float strokeWidth, 
            std::string fontFamily, float dx, float dy, std::string textAnchor, std::string fontStyle, 
            bool checkStroke, std::string fill, std::string stroke)
     : x(x), y(y), content(content), fontSize(fontSize), fillOpacity(fillOpacity), strokeOpacity(strokeOpacity), 
       strokeWidth(strokeWidth), fontFamily(fontFamily), dx(dx), dy(dy), textAnchor(textAnchor), 
       fontStyle(fontStyle), checkStroke(checkStroke), fill(fill), stroke(stroke) {}
 
-float Text::getX() const { return x; }
-float Text::getY() const { return y; }
-std::string Text::getContent() const { return content; }
-float Text::getFontSize() const { return fontSize; }
-std::string Text::getFontFamily() const { return fontFamily; }
-std::string Text::getFill() const { return fill; }
-std::string Text::getStroke() const { return stroke; }
+float Text_::getX() const { return x; }
+float Text_::getY() const { return y; }
+std::string Text_::getContent() const { return content; }
+float Text_::getFontSize() const { return fontSize; }
+std::string Text_::getFontFamily() const { return fontFamily; }
+std::string Text_::getFill() const { return fill; }
+std::string Text_::getStroke() const { return stroke; }
 
-void Text::Draw() {
+void Text_::Draw(Graphics& graphics, vector<Defs*>& defs) {
     normalizeTextContent();
     if (IsStringValidForFont()) {
         std::cout << "Drawing text at (" << x << ", " << y << ") with content: '" << content 
@@ -29,10 +29,10 @@ void Text::Draw() {
     }
 }
 
-void Text::normalizeTextContent() {
+void Text_::normalizeTextContent() {
     std::transform(content.begin(), content.end(), content.begin(), ::toupper);
 }
 
-bool Text::IsStringValidForFont() const {
+bool Text_::IsStringValidForFont() const {
     return !content.empty(); 
 }

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-class Text : public Shape {
+class Text_ : public Shape {
 private:
     float x, y;                     // Tọa độ của văn bản
     std::string content;            // Nội dung văn bản
@@ -21,11 +21,12 @@ private:
     std::string fill, stroke;       // Gradient hoặc màu lấp đầy và nét viền
 
 public:
-    Text(float x = 0, float y = 0, std::string content = "", float fontSize = 12.0f, 
-         float fillOpacity = 1.0f, float strokeOpacity = 1.0f, float strokeWidth = 1.0f,
-         std::string fontFamily = "Arial", float dx = 0, float dy = 0, 
-         std::string textAnchor = "start", std::string fontStyle = "normal", 
-         bool checkStroke = false, std::string fill = "black", std::string stroke = "none");
+    Text_() : x(0), y(0), content(""), fontSize(12.0f), fillOpacity(1.0f), strokeOpacity(1.0f),
+        strokeWidth(1.0f), fontFamily("Arial"), dx(0), dy(0), textAnchor("start"), fontStyle("normal"),
+        checkStroke(false), fill("black"), stroke("none") {}
+    Text_(float, float, std::string, float, float, float, float, std::string, float, float, 
+        std::string, std::string, bool, std::string, std::string);
+              
 
     float getX() const;
     float getY() const;
@@ -35,7 +36,7 @@ public:
     std::string getFill() const;
     std::string getStroke() const;
 
-    void Draw();
+    void Draw(Graphics&, vector<Defs*>&) override;
 
     void normalizeTextContent();
     bool IsStringValidForFont() const;

@@ -3,8 +3,7 @@
 #include "Defs.h"
 #include <string>
 #include <vector>
-class Shape
-{
+class Shape {
 protected:
     float fillOpacity, strokeOpacity, strokeWidth;
     RGB fillRGB, strokeRGB;
@@ -20,18 +19,18 @@ public:
     GraphicsState TransformSVG(Graphics&, Transform);
     virtual void Draw(Graphics&, vector<Defs*>&) = 0;
 };
-class Ellipse : public Shape
-{
+
+class Ellipse_ : public Shape {
 protected:
     float cx, cy;
     float rx, ry;
 
 public:
-    Ellipse(float, float, float, float, float, float, float, RGB, RGB, Transform, string, string);
+    Ellipse_(float, float, float, float, float, float, float, RGB, RGB, Transform, string, string);
     void Draw(Graphics&, vector<Defs*>&) override;
 };
-class Circle : public Ellipse
-{
+
+class Circle : public Ellipse_ {
 private:
     float r;
 
@@ -40,17 +39,16 @@ public:
 
     void Draw(Graphics&, vector<Defs*>&) override;
 };
-class Rectangle : public Shape
-{
+
+class Rectangle_ : public Shape {
 private:
     float x, y, width, height;
 public:
-    Rectangle(float, float, float, float, float, float, RGB, RGB, float, Transform, string, string);
+    Rectangle_(float, float, float, float, float, float, RGB, RGB, float, Transform, string, string);
     void Draw(Graphics&, vector<Defs*>&) override;
 };
 
-class Line : public Shape
-{
+class Line : public Shape {
 private:
     float x1, y1, x2, y2;
 
@@ -58,29 +56,29 @@ public:
     Line(float, float, float, float, float, RGB, float, Transform, string);
     void Draw(Graphics&, vector<Defs*>&) override;
 };
-class Polygon : public Shape
-{
+
+class Polygon_ : public Shape {
 private:
     string points;
     vector<pair<float, float>> allPoints;
 
 public:
-    string chuanhoa1(string);
-    void parsePoints1(string, vector<pair<float, float>>&);
-    Polygon(const string&, float, float, RGB, RGB, float, Transform, string, string);
+    string standardization(string);
+    void parsePoints_(string, vector<pair<float, float>>&);
+    Polygon_(const string&, float, float, RGB, RGB, float, Transform, string, string);
     void Draw(Graphics&, vector<Defs*>&) override;
 };
-class Polyline : public Shape
-{
+
+class Polyline_ : public Shape {
 private:
 
     string points;
     vector<pair<float, float>> allPoints;
 
 public:
-    string chuanhoa2(string);
+    string standardization_Poly(string);
     void parsePoints2(string, vector<pair<float, float>>&);
-    Polyline(const string&, float, float, float, RGB, RGB, Transform, string, string);
+    Polyline_(const string&, float, float, float, RGB, RGB, Transform, string, string);
     void Draw(Graphics&, vector<Defs*>&) override;
 };
 #endif // !SHAPES_H

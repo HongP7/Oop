@@ -613,7 +613,7 @@ void parseTransform(const string& transformStr, Transform& transform)
         if (check)
         {
             float num2 = stof(scaleMatches[2].str());
-            transform.scaleX = num1;
+            transform.scaleX = num1;    
             transform.scaleY = num2;
         }
         else
@@ -736,7 +736,7 @@ void parseTransformChildforText(const string& transformStr, Transform& transform
 
 //////////////////////////////////////////////////////
 // Circle
-void parseCircleNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild) {
+void parseCircleNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild, regex rgbR) {
     float cx = node.attribute("cx").as_float();
     float cy = node.attribute("cy").as_float();
     float r = node.attribute("r").as_float();
@@ -758,7 +758,7 @@ void parseCircleNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild 
             fillRGB = { 255, 255, 255 };
         } else if (!fill.empty()) {
             if (fill.find("url") == string::npos) {
-                fill = convert_String_to_RGB(fillRGB, fill, matches, rgbRegex);
+                fill = convert_String_to_RGB(fillRGB, fill, matches, rgbR);
             } else {
                 int hashtagPos = fill.find("#");
                 int stopPos = fill.find(")");
@@ -774,7 +774,7 @@ void parseCircleNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild 
             strokeOpacity = 0;
             strokeRGB = { 255, 255, 255 };
         } else if (!stroke.empty()) {
-            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbRegex);
+            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbR);
         } else {
             strokeRGB = groupChild.strokeRGB;
         }
@@ -787,8 +787,9 @@ void parseCircleNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild 
     Circle* circle = new Circle(cx, cy, r, fillOpacity, strokeOpacity, fillRGB, strokeRGB, strokeWidth, transform, fill, "");
     elements.push_back(circle);
 }
-Rect
-void parseRectNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild) {
+
+// Rect
+void parseRectNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild, regex rgbR) {
     float x = node.attribute("x").as_float();
     float y = node.attribute("y").as_float();
     float width = node.attribute("width").as_float();
@@ -811,7 +812,7 @@ void parseRectNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
             fillRGB = { 255, 255, 255 };
         } else if (!fill.empty()) {
             if (fill.find("url") == string::npos) {
-                fill = convert_String_to_RGB(fillRGB, fill, matches, rgbRegex);
+                fill = convert_String_to_RGB(fillRGB, fill, matches, rgbR);
             } else {
                 int hashtagPos = fill.find("#");
                 int stopPos = fill.find(")");
@@ -827,7 +828,7 @@ void parseRectNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
             strokeOpacity = 0;
             strokeRGB = { 255, 255, 255 };
         } else if (!stroke.empty()) {
-            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbRegex);
+            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbR);
         } else {
             strokeRGB = groupChild.strokeRGB;
         }
@@ -837,11 +838,12 @@ void parseRectNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
     string transformValue = node.attribute("transform").value();
     Transform transform = { 0, 0, 0, 1.0, 1.0 };
     parseTransformChild(transformValue, transform, groupChild);
-    Rect_* rect = new Rect_(x, y, width, height, fillOpacity, strokeOpacity, fillRGB, strokeRGB, strokeWidth, transform, fill, "");
-    elements.push_back(rect);
+    Rectangle_* re = new Rectangle_(x, y, width, height, fillOpacity, strokeOpacity, fillRGB, strokeRGB, strokeWidth, transform, fill, "");
+    elements.push_back(re);
 }
-Line
-void parseLineNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild) {
+
+// Line
+void parseLineNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild, regex rgbR) {
     float x1 = node.attribute("x1").as_float();
     float y1 = node.attribute("y1").as_float();
     float x2 = node.attribute("x2").as_float();
@@ -862,7 +864,7 @@ void parseLineNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
             strokeOpacity = 0;
             strokeRGB = { 255, 255, 255 };
         } else if (!stroke.empty()) {
-            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbRegex);
+            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbR);
         } else {
             strokeRGB = groupChild.strokeRGB;
         }
@@ -876,8 +878,8 @@ void parseLineNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
     elements.push_back(line);
 }
 
-Text
-void parseTextNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild) {
+// Text
+void parseTextNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild, regex rgbR) {
     float x = node.attribute("x").as_float();
     float y = node.attribute("y").as_float();
     float dx = node.attribute("dx").as_float();
@@ -914,7 +916,7 @@ void parseTextNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
             fillRGB = { 255, 255, 255 };
         } else if (!fill.empty()) {
             if (fill.find("url") == string::npos) {
-                fill = convert_String_to_RGB(fillRGB, fill, matches, rgbRegex);
+                fill = convert_String_to_RGB(fillRGB, fill, matches, rgbR);
             } else {
                 int hashtagPos = fill.find("#");
                 int stopPos = fill.find(")");
@@ -931,7 +933,7 @@ void parseTextNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
             strokeOpacity = 0;
             strokeRGB = { 255, 255, 255 };
         } else if (!stroke.empty()) {
-            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbRegex);
+            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbR);
         } else {
             strokeRGB = groupChild.strokeRGB;
             if (stroke == "" && strokeRGB.r == 255 && strokeRGB.g == 255 && strokeRGB.b == 255) {
@@ -947,11 +949,12 @@ void parseTextNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
     parseTransformChildforText(transformValue, transform, groupChild, trans);
     // fontFamily
     string fontFamily = node.attribute("font-family").empty() ? "Times New Roman" : node.attribute("font-family").value();
-    Text* text = new Text(x, y, content, fontSize, fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, fontFamily, dx, dy, textAnchor, fontStyle, checkk, fill, "", trans);
+    Text_* text = new Text_(x, y, content, fontSize, fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, fontFamily, dx, dy, textAnchor, fontStyle, checkk, fill, "", trans);
     elements.push_back(text);
 }
-Polyline
-void parsePolylineNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild) {
+
+// Polyline
+void parsePolylineNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild, regex rgbR) {
     string points = node.attribute("points").value();
     bool chekk = true;
     float fillOpacity = 1, strokeOpacity = 1, strokeWidth = 1;
@@ -970,7 +973,7 @@ void parsePolylineNode(pugi::xml_node& node, vector<Shape*>& elements, groupChil
             fillOpacity = 0;
             fillRGB = { 256, 256, 256 };
         } else if (!fill.empty()) {
-            convert_String_to_RGB_(fillRGB, fill, matches, rgbRegex);
+            convert_String_to_RGB_(fillRGB, fill, matches, rgbR);
         } else {
             fillRGB = groupChild.fillRGB;
         }
@@ -979,7 +982,7 @@ void parsePolylineNode(pugi::xml_node& node, vector<Shape*>& elements, groupChil
         strokeOpacity = node.attribute("stroke-opacity").empty() ? groupChild.strokeOpacity : node.attribute("stroke-opacity").as_float();
         stroke = node.attribute("stroke").value();
         if (!stroke.empty() && stroke != "none") {
-            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbRegex);
+            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbR);
         } else {
             strokeRGB = groupChild.strokeRGB;
             auto temp = strokeOpacity;
@@ -998,11 +1001,12 @@ void parsePolylineNode(pugi::xml_node& node, vector<Shape*>& elements, groupChil
     string transformValue = node.attribute("transform").value();
     Transform transform = { 0, 0, 0, 1.0, 1.0 };
     parseTransformChild(transformValue, transform, groupChild);
-    Polyline_* polyline = new Polyline_(points, fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, "", "");
-    elements.push_back(polyline);
+    Polyline_* poly = new Polyline_(points, fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, "", "");
+    elements.push_back(poly);
 }
-Polygon
-void parsePolygonNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild) {
+
+// Polygon
+void parsePolygonNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild, regex rgbR) {
     string points = node.attribute("points").value();
     bool chekk = true;
     float fillOpacity = 1, strokeOpacity = 1, strokeWidth = 1;
@@ -1018,7 +1022,7 @@ void parsePolygonNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild
         fillOpacity = node.attribute("fill-opacity").empty() ? groupChild.fillOpacity : node.attribute("fill-opacity").as_float();
         fill = node.attribute("fill").value();
         if (!fill.empty()) {
-            convert_String_to_RGB_(fillRGB, fill, matches, rgbRegex);
+            convert_String_to_RGB_(fillRGB, fill, matches, rgbR);
         } else {
             fillRGB = groupChild.fillRGB;
         }
@@ -1027,7 +1031,7 @@ void parsePolygonNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild
         strokeOpacity = node.attribute("stroke-opacity").empty() ? groupChild.strokeOpacity : node.attribute("stroke-opacity").as_float();
         stroke = node.attribute("stroke").value();
         if (!stroke.empty()) {
-            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbRegex);
+            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbR);
         } else {
             strokeRGB = groupChild.strokeRGB;
             auto temp = strokeOpacity;
@@ -1046,12 +1050,12 @@ void parsePolygonNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild
     string transformValue = node.attribute("transform").value();
     Transform transform = { 0, 0, 0, 1.0, 1.0 };
     parseTransformChild(transformValue, transform, groupChild);
-    Polygon_* polygon = new Polygon_(points, fillOpacity, strokeOpacity, fillRGB, strokeRGB, strokeWidth, transform, "", "");
-    elements.push_back(polygon);
+    Polygon_* polyg = new Polygon_(points, fillOpacity, strokeOpacity, fillRGB, strokeRGB, strokeWidth, transform, "", "");
+    elements.push_back(polyg);
 }
 
-Ellipse
-void parseEllipseNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild) {
+// Ellipse
+void parseEllipseNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild, regex rgbR) {
     float cx = node.attribute("cx").as_float();
     float cy = node.attribute("cy").as_float();
     float rx = node.attribute("rx").as_float();
@@ -1074,7 +1078,7 @@ void parseEllipseNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild
             fillRGB = { 255, 255, 255 };
         } else if (!fill.empty()) {
             if (fill.find("url") == string::npos) {
-                fill = convert_String_to_RGB(fillRGB, fill, matches, rgbRegex);
+                fill = convert_String_to_RGB(fillRGB, fill, matches, rgbR);
             } else {
                 int hashtagPos = fill.find("#");
                 int stopPos = fill.find(")");
@@ -1090,7 +1094,7 @@ void parseEllipseNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild
             strokeOpacity = 0;
             strokeRGB = { 255, 255, 255 };
         } else if (!stroke.empty()) {
-            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbRegex);
+            convert_String_to_RGB_(strokeRGB, stroke, matches, rgbR);
         } else {
             strokeRGB = groupChild.strokeRGB;
         }
@@ -1100,11 +1104,12 @@ void parseEllipseNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild
     string transformValue = node.attribute("transform").value();
     Transform transform = { 0, 0, 0, 1.0, 1.0 };
     parseTransformChild(transformValue, transform, groupChild);
-    Ellipse_* ellipse = new Ellipse_(cx, cy, rx, ry, fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, fill, "");
-    elements.push_back(ellipse);
+    Ellipse_* ell = new Ellipse_(cx, cy, rx, ry, fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, fill, "");
+    elements.push_back(ell);
 }
-Path
-void parsePathNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild) {
+
+// Path
+void parsePathNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild, regex rgbR) {
     float fillOpacity = 1, strokeOpacity = 1, strokeWidth = 1;
     string fill, stroke;
     RGB fillRGB = { 0, 0, 0 };
@@ -1123,7 +1128,7 @@ void parsePathNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
             fillRGB = { 255, 255, 255 };
         } else if (!fill.empty()) {
             if (fill.find("url") == string::npos) {
-                fill = convert_String_to_RGB(fillRGB, fill, matches, rgbRegex);
+                fill = convert_String_to_RGB(fillRGB, fill, matches, rgbR);
             } else {
                 int hashtagPos = fill.find("#");
                 int stopPos = fill.find(")");
@@ -1140,7 +1145,7 @@ void parsePathNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
             strokeOpacity = 0;
             strokeRGB = { 255, 255, 255 };
         } else if (!stroke.empty()) {
-            stroke = convert_String_to_RGB(strokeRGB, stroke, matches, rgbRegex);
+            stroke = convert_String_to_RGB(strokeRGB, stroke, matches, rgbR);
         } else {
             strokeRGB = groupChild.strokeRGB;
             if (groupChild.strokeRGB.r == groupChild.strokeRGB.g == groupChild.strokeRGB.b == strokeRGB.r == strokeRGB.g == strokeRGB.b)
@@ -1158,8 +1163,9 @@ void parsePathNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild gr
     ClassPath* path = new ClassPath(fillOpacity, strokeOpacity, strokeWidth, fillRGB, strokeRGB, transform, path_, fill, "", 0, 0);
     elements.push_back(path);
 }
-Group
-void parseGroupNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild) {
+
+// Group
+void parseGroupNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild, regex rgbR) {
     if (isParsingGroup) {
         return;
     }
@@ -1175,7 +1181,7 @@ void parseGroupNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild g
         fillOpacity = 0;
         fillRGB = { 255, 255, 255 };
     }
-    convert_String_to_RGB_(fillRGB, fill, matches, rgbRegex);
+    convert_String_to_RGB_(fillRGB, fill, matches, rgbR);
     if (!fill.empty()) {
         groupChild.fillRGB = fillRGB;
     }
@@ -1186,7 +1192,7 @@ void parseGroupNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild g
         strokeOpacity = 0;
         strokeRGB = { 255, 255, 255 };
     }
-    convert_String_to_RGB_(strokeRGB, stroke, matches, rgbRegex);
+    convert_String_to_RGB_(strokeRGB, stroke, matches, rgbR);
     if (!stroke.empty()) {
         groupChild.strokeRGB = strokeRGB;
     }
@@ -1213,23 +1219,25 @@ void parseGroupNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild g
 
 void parseSVGNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild groupChild) {
     string nodeName = node.name();
+    static regex rgb_("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)");
+
     if (nodeName == "circle") {
-        parseCircleNode(node, elements, groupChild);
+        parseCircleNode(node, elements, groupChild, rgb_);
     } else if (nodeName == "rect") {
-        parseRectNode(node, elements, groupChild);
+        parseRectNode(node, elements, groupChild, rgb_);
     } else if (nodeName == "line") {
-        parseLineNode(node, elements, groupChild);
+        parseLineNode(node, elements, groupChild, rgb_);
     } else if (nodeName == "text") {
-        parseTextNode(node, elements, groupChild);
+        parseTextNode(node, elements, groupChild, rgb_);
     } else if (nodeName == "polyline") {
-        parsePolylineNode(node, elements, groupChild);
+        parsePolylineNode(node, elements, groupChild, rgb_);
     } else if (nodeName == "polygon") {
-        parsePolygonNode(node, elements, groupChild);
+        parsePolygonNode(node, elements, groupChild, rgb_);
     } else if (nodeName == "ellipse") {
-        parseEllipseNode(node, elements, groupChild);
+        parseEllipseNode(node, elements, groupChild, rgb_);
     } else if (nodeName == "path") {
-        parsePathNode(node, elements, groupChild);
+        parsePathNode(node, elements, groupChild, rgb_);
     } else if (nodeName == "g") {
-        parseGroupNode(node, elements, groupChild);
+        parseGroupNode(node, elements, groupChild, rgb_);
     }
 }

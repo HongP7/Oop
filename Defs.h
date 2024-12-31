@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <vector>
-#include<sstream>
+#include <sstream>
 #include <fstream>
 #include <string>
 #include <windows.h>
@@ -12,19 +12,17 @@
 using namespace std;
 using namespace Gdiplus;
 
-struct RGB
-{
+struct RGB {
     int r, g, b;
 };
 
-struct Transform
-{
+struct Transform {
     float translateX, translateY, rotateAngle, scaleX, scaleY;
     float skewX, skewY;
     vector<string> transformOrder;
 };
-struct groupChild
-{
+
+struct groupChild {
     float fontSize;
     float strokeOpacity, fillOpacity, strokeWidth;
     RGB strokeRGB, fillRGB;
@@ -32,8 +30,7 @@ struct groupChild
 };
 
 
-struct pointLinearGradient
-{
+struct pointLinearGradient {
     float x1, x2, y1, y2;
 };
 
@@ -52,8 +49,8 @@ public:
     int getstopColor_green();
     int getstopColor_blue();
 };
-class Gradient
-{
+
+class Gradient {
 protected:
     string id;
 public:
@@ -62,8 +59,7 @@ public:
     virtual string getID() = 0;
 };
 
-class Defs
-{
+class Defs {
 private:
     vector<LinearGradient*> LinearGradient_list;
     vector<RadialGradient*> RadialGradient_list;
@@ -74,8 +70,7 @@ public:
     vector<RadialGradient*> getradial();
 };
 
-class LinearGradient : public Gradient
-{
+class LinearGradient : public Gradient {
 private:
     pointLinearGradient point;
     vector<Stop*> stop_list;
@@ -88,8 +83,7 @@ public:
     Transform gettransform();
 };
 
-class RadialGradient : public Gradient
-{
+class RadialGradient : public Gradient {
 private:
     float cx, cy, r, fx, fy;
     string xlink_href;
