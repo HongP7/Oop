@@ -1,4 +1,4 @@
-#ifndef PATH_H
+﻿#ifndef PATH_H
 #define PATH_H
 
 #include "Shapes.h"
@@ -11,6 +11,10 @@ public:
     ClassPath(const std::string& pathData, const Transform& transform);
     void Draw(Graphics& graphics, std::vector<Defs*>& defs) override;
     void convertPathToValue();
+
+    void addValue(float value);
+    void addType(char type);
+    void clear();
 
 private:
     std::string pathData;
