@@ -1213,7 +1213,7 @@ void parseGroupNode(pugi::xml_node& node, vector<Shape*>& elements, groupChild g
     for (pugi::xml_node& childNode : node.children()) {
         parseSVGNode(childNode, groupElements, groupChild);
     }
-    Group* group = new Group(groupElements, strokeOpacity, fillOpacity, strokeRGB, fillRGB, strokeWidth, transform, fontSize, "", "");
+    Group_* group = new Group_(groupElements, strokeOpacity, fillOpacity, strokeRGB, fillRGB, strokeWidth, transform, fontSize, "", "");
     elements.push_back(group);
 }
 
