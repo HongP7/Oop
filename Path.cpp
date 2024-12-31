@@ -29,6 +29,19 @@ void ClassPath::convertPathToValue() {
     }
 }
 
+void ClassPath::addValue(float value) {
+    values.push_back(value);
+}
+
+void ClassPath::addType(char type) {
+    types.push_back(type);
+}
+
+void ClassPath::clear() {
+    values.clear();
+    types.clear();
+}
+
 void ClassPath::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
     GraphicsState state = TransformSVG(graphics, transform);
     GraphicsPath pathToDraw;
@@ -151,19 +164,10 @@ void ClassPath::Draw(Graphics& graphics, std::vector<Defs*>& defs) {
             break;
         }
     }
-    // Chuyển đổi giá trị float sang BYTE
-    BYTE fillR = static_cast<BYTE>(fillRGB.r);
-    BYTE fillG = static_cast<BYTE>(fillRGB.g);
-    BYTE fillB = static_cast<BYTE>(fillRGB.b);
-    BYTE fillA = static_cast<BYTE>(255 * fillOpacity);
 
-    BYTE strokeR = static_cast<BYTE>(strokeRGB.r);
-    BYTE strokeG = static_cast<BYTE>(strokeRGB.g);
-    BYTE strokeB = static_cast<BYTE>(strokeRGB.b);
-    BYTE strokeA = static_cast<BYTE>(255 * strokeOpacity);
     // Tạo brush và pen cho fill và stroke
-    SolidBrush fillBrush(Color(255 * fillOpacity, fillRGB.r, fillRGB.g, fillRGB.b));
-    Pen strokePen(Color(255 * fillOpacity, strokeRGB.r, strokeRGB.g, strokeRGB.b), strokeWidth);
+    SolidBrush fillBrush(Color(255 * static_cast<int>(fillOpacity), fillRGB.r, fillRGB.g, fillRGB.b));
+    Pen strokePen(Color(255 * static_cast<int>(strokeOpacity), strokeRGB.r, strokeRGB.g, strokeRGB.b), strokeWidth);
 
     if (!fill.empty()) {
         // Tìm kiếm gradient tương ứng trong defs
@@ -265,9 +269,7 @@ void ClassPath::AddArc(GraphicsPath& pathToDraw, PointF& lastPoint, float rx, fl
         deltaTheta += 2 * M_PI;
     }
 
-    AddArc(pathToDraw, cx, cy, rx, ry, theta, deltaTheta, sweepFlag);
-
-    lastPoint = endPoint;
+    pathToDraw.AddArc(cx - rx, cy - ry, 2 * rx, 2 * ry, theta * (180.0 / M_PI), deltaTheta * (180.0 / M_PI));
 }
 
 void ClassPath::AddArc(GraphicsPath& pathToDraw, float cx, float cy, float rx, float ry, float startAngle, float deltaAngle, bool sweepFlag) {
