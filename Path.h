@@ -1,18 +1,11 @@
 ﻿#ifndef PATH_H
 #define PATH_H
-
+#define _USE_MATH_DEFINES
 #include "Shapes.h"
 #include "Defs.h"
 #include <vector>
 #include <string>
 
-struct Transform {
-    float scaleX, scaleY;
-    float translateX, translateY;
-    float rotateAngle;
-    float skewX, skewY;
-    std::vector<std::string> transformOrder;
-};
 
 class Path {
 public:
